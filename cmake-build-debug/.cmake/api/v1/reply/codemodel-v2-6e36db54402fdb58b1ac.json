@@ -9,7 +9,7 @@
 					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
-						"string" : "3.27"
+						"string" : "3.13"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
@@ -39,7 +39,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "GameBoy_Emulator_SDL2::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-GameBoy_Emulator_SDL2-Debug-86b566c5b80b6db8788f.json",
+					"jsonFile" : "target-GameBoy_Emulator_SDL2-Debug-c1d1ccb6c040a8ae3491.json",
 					"name" : "GameBoy_Emulator_SDL2",
 					"projectIndex" : 0
 				}
