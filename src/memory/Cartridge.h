@@ -40,6 +40,22 @@ enum class CartridgeType : uint8_t
 
 };
 
+enum class RomSize : uint8_t
+{
+    KB_32 = 0x00u,
+    KB_64 = 0x01u,
+    KB_128 = 0x02u,
+    KB_256 = 0x03u,
+    KB_512 = 0x04u,
+    MIB_1 = 0x05u,
+    MIB_2 = 0x06u,
+    MIB_4 = 0x07u,
+    MIB_8 = 0x08u,
+    MIB_1_1 = 0x52u,
+    MIB_1_2 = 0x53u,
+    MIB_1_5 = 0x54u,
+};
+
 class Cartridge {
 };
 
