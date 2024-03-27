@@ -40,6 +40,34 @@ enum class CartridgeType : uint8_t
     HuC_1_RAM_BATTERY = 0xFFu,
 };
 
+enum class RomSize : uint8_t
+{
+    // kibibyte
+    KIB_32 = 0x00u,
+    KIB_64 = 0x01u,
+    KIB_128 = 0x02u,
+    KIB_256 = 0x03u,
+    KIB_512 = 0x04u,
+    // mebibyte
+    MIB_1 = 0x05u,
+    MIB_2 = 0x06u,
+    MIB_4 = 0x07u,
+    MIB_8 = 0x08u,
+    MIB_1_1 = 0x52u,
+    MIB_1_2 = 0x53u,
+    MIB_1_5 = 0x54u,
+};
+
+enum class RamSize : uint8_t
+{
+    NO_RAM = 0x00u,
+    UNUSED = 0x01u,
+    KIB_8 = 0x02u, // 1 bank
+    KIB_32 = 0x03u, // 4 banks of 8 KiB each
+    KIB_128 = 0x04u, // 16 banks of 8 KiB each
+    KIB_64 = 0x05u, // 8 banks of 8 KiB each
+};
+
 class Cartridge {
 public:
     Cartridge();
