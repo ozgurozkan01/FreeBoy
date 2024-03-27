@@ -68,6 +68,24 @@ enum class RamSize : uint8_t
     KIB_64 = 0x05u, // 8 banks of 8 KiB each
 };
 
+struct RomHeader
+{
+    uint32_t entryPoint; // 0x0104-0x0133
+    uint8_t nintendoLogo[0x30u];
+    char title[0x10];
+    uint8_t manifacturerCode;
+    uint8_t sgbFlag;
+    CartridgeType cartridgeType; // what kind of hardware is present on the cartridge
+    RamSize ramSize; // how much RAM is present on the cartridge
+    RomSize romSize; // how much ROM is present on the cartridge
+    uint8_t destinationCode;
+    uint8_t oldLicenseeCode;
+    uint16_t newLicenseeCode;
+    uint8_t romVersionNumber; // the version number of the game
+    uint8_t checksum;
+    uint16_t globalChecksum;
+};
+
 class Cartridge {
 public:
     Cartridge();
@@ -79,6 +97,7 @@ private:
     char fileName[1024]{};
     uint32_t romSize{};
     uint8_t* romData{};
+    RomHeader* romHeader{};
     std::string *licenseeCode;
 };
 
