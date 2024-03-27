@@ -3,67 +3,53 @@
 //
 
 #include "Cartridge.h"
+#include <fstream>
 
-
-#include <cstdint>
-
-enum class CartridgeType : uint8_t
+Cartridge::Cartridge()
 {
-    ROM_ONLY = 0x00u,
-    MBC_1 = 0x01u,
-    MBC_1_RAM = 0x02u,
-    MBC_1_RAM_BATTERY = 0x03u,
-    MBC_2 = 0x05u,
-    MBC_2_BATTERY = 0x06u,
-    ROM_RAM = 0x08u,
-    ROM_RAM_BATTERY = 0x09u,
-    MMM_01 = 0x0Bu,
-    MMM_01_RAM = 0x0Cu,
-    MMM_01_RAM_BATTERY = 0x0Du,
-    MBC_3_TIMER_BATTERY = 0x0Fu,
-    MBC_3_TIMER_RAM_BATTERY = 0x10u,
-    MBC_3 = 0x11u,
-    MBC_3_RAM = 0x12u,
-    MBC_3_RAM_BATTERY = 0x13u,
-    MBC_5 = 0x19,
-    MBC_5_RAM = 0x1Au,
-    MBC_5_RAM_BATTERY = 0x1Bu,
-    MBC_5_RUMBLE = 0x1Cu,
-    MBC_5_RUMBLE_RAM = 0x1Du,
-    MBC_5_RUMBLE_RAM_BATTERY = 0x1Eu,
-    MBC_6 = 0x20u,
-    MBC_7_SENSOR_RUMBLE_RAM_BATTERY = 0x22u,
-    POCKET_CAMERA = 0xFCu,
-    BANDAI_TAMA_5 = 0xFDu,
-    HuC_3 = 0xFEu,
-    HuC_1_RAM_BATTERY = 0xFFu,
+}
 
-};
-
-enum class RomSize : uint8_t
+bool Cartridge::loadCartridge(char *cartridgeName)
 {
-    // kibibyte
-    KIB_32 = 0x00u,
-    KIB_64 = 0x01u,
-    KIB_128 = 0x02u,
-    KIB_256 = 0x03u,
-    KIB_512 = 0x04u,
-    // mebibyte
-    MIB_1 = 0x05u,
-    MIB_2 = 0x06u,
-    MIB_4 = 0x07u,
-    MIB_8 = 0x08u,
-    MIB_1_1 = 0x52u,
-    MIB_1_2 = 0x53u,
-    MIB_1_5 = 0x54u,
-};
+    std::fstream cartridgeFile;
+    cartridgeFile.open(cartridgeName, std::ios::binary);
 
-enum class RamSize : uint8_t
+    if (!cartridgeFile.is_open())
+    {
+        return false;
+    }
+
+    cartridgeFile.seekg(0, std::ios::end);
+    romSize = cartridgeFile.tellg();
+    cartridgeFile.seekg(std::ios::beg);
+
+    if (!cartridgeFile.read((char*) romData, romSize))
+    {
+        printf("ROM file : %s could not be read properly.\n", cartridgeName);
+        return false;
+    }
+    cartridgeFile.close();
+
+    romHeader = (RomHeader *)(romData + 0x100);
+    romHeader->title[15] = 0;
+    return true;
+}
+
+/*std::string Cartridge::getCartridgeLicenseeName()
 {
-    NO_RAM = 0x00u,
-    UNUSED = 0x01u,
-    KIB_8 = 0x02u, // 1 bank
-    KIB_32 = 0x03u, // 4 banks of 8 KiB each
-    KIB_128 = 0x04u, // 16 banks of 8 KiB each
-    KIB_64 = 0x05u, // 8 banks of 8 KiB each
-};
+    if (romHeader->newLicenseeCode <= 0xA4)
+    {
+        return licenseeCode[romHeader->oldLicenseeCode];
+    }
+    return "UKNOWN";
+}*/
+
+CartridgeType Cartridge::getCartridgeTypeName()
+{
+    return romHeader->cartridgeType;
+}
+
+Cartridge::~Cartridge()
+{
+    delete romHeader;
+}
