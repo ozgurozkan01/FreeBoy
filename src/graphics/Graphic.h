@@ -12,16 +12,11 @@ class Cartridge;
 class Graphic {
 public:
     Graphic(const int windowWidth, const int windowHeigth, const char* windowName);
-    void processEvent();
     bool init();
-    void run();
 private:
     const int windowWidth;
     const int windowHeight;
     const char* windowName;
-
-    bool isRunning;
-    uint64_t ticks;
 
     SDL_Window* mainWindow;
     SDL_Renderer* renderer;

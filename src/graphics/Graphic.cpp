@@ -10,7 +10,6 @@ Graphic::Graphic(const int windowWidth, const int windowHeigth, const char *wind
     windowWidth(windowWidth), windowHeight(windowHeigth), windowName(windowName),
     cartridge()
 {
-    isRunning = true;
 }
 
 bool Graphic::init()
@@ -55,44 +54,14 @@ bool Graphic::init()
         return false;
     }
 
+/*
     if (!cartridge->loadCartridge((char*)""))
     {
         printf("Cartridge could not be created! Error code %s", SDL_GetError());
         return false;
     }
+*/
 
     return true;
-}
-
-void Graphic::run()
-{
-    while (isRunning)
-    {
-        processEvent();
-
-        ticks++;
-    }
-}
-
-void Graphic::processEvent()
-{
-    SDL_Event event;
-
-    while(SDL_PollEvent(&event))
-    {
-        switch (event.key.type)
-        {
-            case SDL_QUIT:
-                isRunning = false;
-                break;
-            case SDL_KEYDOWN:
-                switch (event.key.keysym.sym)
-                {
-                    case SDLK_ESCAPE:
-                        isRunning = false;
-                        break;
-                }
-        }
-    }
 }
 
