@@ -10,7 +10,8 @@
 enum class EmulatorState : uint8_t
 {
     PAUSE,
-    RUNNING
+    RUNNING,
+    QUIT
 };
 
 class Graphic;
@@ -24,6 +25,8 @@ private:
     EmulatorState emulatorState;
 
     Graphic* graphic;
+    uint64_t ticks;
+    void processEvent();
 };
 
 

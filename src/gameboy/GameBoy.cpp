@@ -31,5 +31,33 @@ bool GameBoy::init()
 
 void GameBoy::run()
 {
-    graphic->run();
+    while (emulatorState != EmulatorState::QUIT)
+    {
+        //graphic->run();
+        processEvent();
+
+        ticks++;
+    }
+}
+
+void GameBoy::processEvent()
+{
+    SDL_Event event;
+
+    while(SDL_PollEvent(&event))
+    {
+        switch (event.key.type)
+        {
+            case SDL_QUIT:
+                emulatorState = EmulatorState::QUIT;
+                break;
+            case SDL_KEYDOWN:
+                switch (event.key.keysym.sym)
+                {
+                    case SDLK_ESCAPE:
+                        emulatorState = EmulatorState::PAUSE;
+                        break;
+                }
+        }
+    }
 }
