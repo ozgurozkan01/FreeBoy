@@ -1,4 +1,4 @@
-# GameBoy_Emulator_SDL2
+# FreeBoy
 
 ### Introduction
 After my Chip8 emulator adventure, my interest in low level programming 
