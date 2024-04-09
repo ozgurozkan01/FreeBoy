@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <string>
 
-enum class CartridgeType : uint8_t
+enum class MBC_TYPE : uint8_t
 {
     ROM_ONLY = 0x00u,
     MBC_1 = 0x01u,
@@ -40,7 +40,7 @@ enum class CartridgeType : uint8_t
     HuC_1_RAM_BATTERY = 0xFFu,
 };
 
-enum class RomSize : uint8_t
+enum class ROM_SIZE : uint8_t
 {
     // kibibyte
     KIB_32 = 0x00u,
@@ -58,7 +58,7 @@ enum class RomSize : uint8_t
     MIB_1_5 = 0x54u,
 };
 
-enum class RamSize : uint8_t
+enum class RAM_SIZE : uint8_t
 {
     NO_RAM = 0x00u,
     UNUSED = 0x01u,
@@ -68,37 +68,62 @@ enum class RamSize : uint8_t
     KIB_64 = 0x05u, // 8 banks of 8 KiB each
 };
 
+enum class ROM_START_LOC : uint16_t
+{
+    ENTRY_POINT = 0x0100,
+    NINTENDO_LOGO = 0x0104,
+    TITLE = 0x0134,
+    MANUFACTURER_CODE = 0x013F,
+    CGB_FLAG = 0x0143,
+    NEW_LICENSEE_CODE = 0x0144,
+    SGB_FLAG = 0x146,
+    CARTRIDGE_TYPE = 0x0147,
+    ROM_SIZE = 0x0148,
+    RAM_SIZE = 0x0149,
+    DESTINATION_CODE = 0x014A,
+    OLD_LICENSEE_CODE = 0x014B,
+    MASK_ROM_VERSION_NUMBER = 0x014C,
+    HEADER_CHECKSUM = 0x014D,
+    GLOBAL_CHECKSUM = 0x014E,
+};
+
+
 struct RomHeader
 {
-    uint32_t entryPoint; // 0x0104-0x0133
+    uint32_t entryPoint;
     uint8_t nintendoLogo[0x30u];
-    char title[0x10];
-    uint8_t manifacturerCode;
+    char title[0x10u];
+    uint32_t manufacturerCode;
+    uint8_t cgbFlag;
+    uint16_t newLicenseeCode;
     uint8_t sgbFlag;
-    CartridgeType cartridgeType; // what kind of hardware is present on the cartridge
-    RamSize ramSize; // how much RAM is present on the cartridge
-    RomSize romSize; // how much ROM is present on the cartridge
+    MBC_TYPE mbcType;
+    ROM_SIZE romSize;
+    RAM_SIZE ramSize;
     uint8_t destinationCode;
     uint8_t oldLicenseeCode;
-    uint16_t newLicenseeCode;
-    uint8_t romVersionNumber; // the version number of the game
-    uint8_t checksum;
+    uint8_t maskRomVersionNumber;
+    uint8_t headerChecksum;
     uint16_t globalChecksum;
 };
+
+
 
 class Cartridge {
 public:
     Cartridge();
     ~Cartridge();
-    bool loadCartridge(char* cartridgeName);
-    //std::string getCartridgeLicenseeName();
-    CartridgeType getCartridgeTypeName();
+    bool loadCartridge(const std::string& cartridgeName);
 private:
     char fileName[1024]{};
     uint32_t romSize{};
     uint8_t* romData{};
-    RomHeader* romHeader{};
-    std::string *licenseeCode;
+    RomHeader romHeader{};
+
+    void loadRomHeader();
+    std::string getRamSize();
+    std::string getRomSize();
+    std::string getCartridgeTypeName();
 };
 
 
