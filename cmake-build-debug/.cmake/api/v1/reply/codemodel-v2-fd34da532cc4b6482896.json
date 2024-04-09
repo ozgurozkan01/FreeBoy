@@ -27,7 +27,7 @@
 					[
 						0
 					],
-					"name" : "GameBoy_Emulator_SDL2",
+					"name" : "FreeBoy",
 					"targetIndexes" : 
 					[
 						0
@@ -38,9 +38,9 @@
 			[
 				{
 					"directoryIndex" : 0,
-					"id" : "GameBoy_Emulator_SDL2::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-GameBoy_Emulator_SDL2-Debug-c1d1ccb6c040a8ae3491.json",
-					"name" : "GameBoy_Emulator_SDL2",
+					"id" : "FreeBoy::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-FreeBoy-Debug-237d285e9f543d5b310c.json",
+					"name" : "FreeBoy",
 					"projectIndex" : 0
 				}
 			]
@@ -49,8 +49,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "C:/Users/ozgur/GitHub/GameBoy_Emulator_SDL2/cmake-build-debug",
-		"source" : "C:/Users/ozgur/GitHub/GameBoy_Emulator_SDL2"
+		"build" : "C:/Users/ozgur/GitHub/FreeBoy/cmake-build-debug",
+		"source" : "C:/Users/ozgur/GitHub/FreeBoy"
 	},
 	"version" : 
 	{
