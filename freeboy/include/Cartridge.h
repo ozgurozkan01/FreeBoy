@@ -89,8 +89,40 @@ enum class ROM_START_LOC : uint16_t
 };
 
 
-class Cartridge {
+struct RomHeader
+{
+    uint32_t entryPoint;
+    uint8_t nintendoLogo[0x30u];
+    char title[0x10u];
+    uint32_t manufacturerCode;
+    uint8_t cgbFlag;
+    uint16_t newLicenseeCode;
+    uint8_t sgbFlag;
+    MBC_TYPE mbcType;
+    ROM_SIZE romSize;
+    RAM_SIZE ramSize;
+    uint8_t destinationCode;
+    uint8_t oldLicenseeCode;
+    uint8_t maskRomVersionNumber;
+    uint8_t headerChecksum;
+    uint16_t globalChecksum;
+};
 
+class Cartridge {
+public:
+    Cartridge();
+    ~Cartridge();
+    bool loadCartridge(const std::string& cartridgeName);
+private:
+    char fileName[1024]{};
+    uint32_t romSize{};
+    uint8_t* romData{};
+    RomHeader romHeader{};
+
+    void loadRomHeader();
+    std::string getRamSize();
+    std::string getRomSize();
+    std::string getCartridgeTypeName();
 };
 
 
