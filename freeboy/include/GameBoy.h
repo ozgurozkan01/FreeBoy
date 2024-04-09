@@ -8,6 +8,13 @@
 
 #include <cstdint>
 
+enum class EmulatorState : uint8_t
+{
+    PAUSE,
+    RUNNING,
+    QUIT
+};
+
 class Graphic;
 
 class GameBoy {
@@ -16,6 +23,8 @@ public:
     bool init();
     void run();
 private:
+    EmulatorState emulatorState;
+
     Graphic* graphic;
     uint64_t ticks;
     void processEvent();
