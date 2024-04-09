@@ -9,6 +9,10 @@ find_package(SDL2 CONFIG REQUIRED)
 include_directories(${SDL2_INCLUDE_DIR})
 add_executable(FreeBoy main.cpp
         freeboy/src/Cartridge.cpp
-        freeboy/include/Cartridge.h)
+        freeboy/include/Cartridge.h
+        freeboy/src/GameBoy.cpp
+        freeboy/include/GameBoy.h
+        freeboy/src/Graphic.cpp
+        freeboy/include/Graphic.h)
 
 target_link_libraries(FreeBoy ${SDL2_LIBRARY} -lmingw32 -lSDL2main -lSDL2 -mwindows)
