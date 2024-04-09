@@ -1,6 +1,10 @@
-#include <iostream>
+#include "freeboy/include/GameBoy.h"
 
-int main() {
-    std::cout << "Hello, World!" << std::endl;
+int main(int argc, char **argv) {
+    GameBoy gameBoy;
+    if (gameBoy.init())
+    {
+        gameBoy.run();
+    }
     return 0;
 }
