@@ -1,11 +1,6 @@
-#include "src/gameboy/GameBoy.h"
+#include <iostream>
 
-int main (int argc, char **argv)
-{
-    GameBoy gameBoy;
-    if (gameBoy.init())
-    {
-        gameBoy.run();
-    }
+int main() {
+    std::cout << "Hello, World!" << std::endl;
     return 0;
 }
