@@ -8,7 +8,7 @@
 
 Graphic::Graphic(const int windowWidth, const int windowHeigth, const char *windowName) :
     windowWidth(windowWidth), windowHeight(windowHeigth), windowName(windowName),
-    cartridge()
+    cartridge(new Cartridge())
 {
 }
 
@@ -16,7 +16,7 @@ bool Graphic::init()
 {
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
-        printf("SDL library could not be loaded! Error code %s", SDL_GetError());
+        printf("SDL library could not be loaded! Error code %s\n", SDL_GetError());
         return false;
     }
 
@@ -28,7 +28,7 @@ bool Graphic::init()
 
     if (mainWindow == nullptr)
     {
-        printf("SDL window could not be created! Error code %s", SDL_GetError());
+        printf("SDL window could not be created! Error code %s\n", SDL_GetError());
         return false;
     }
 
@@ -38,7 +38,7 @@ bool Graphic::init()
 
     if (renderer == nullptr)
     {
-        printf("SDL renderer could not be created! Error code %s", SDL_GetError());
+        printf("SDL renderer could not be created! Error code %s\n", SDL_GetError());
         return false;
     }
 
@@ -50,17 +50,15 @@ bool Graphic::init()
 
     if (texture == nullptr)
     {
-        printf("SDL texture could not be created! Error code %s", SDL_GetError());
+        printf("SDL texture could not be created! Error code %s\n", SDL_GetError());
         return false;
     }
 
-/*
-    if (!cartridge->loadCartridge((char*)""))
+    if (!cartridge->loadCartridge("C:/Users/ozgur/GitHub/FreeBoy/ROMs/dmg-acid2.gb"))
     {
-        printf("Cartridge could not be created! Error code %s", SDL_GetError());
+        printf("Cartridge could not be created! Error code %s\n", SDL_GetError());
         return false;
     }
-*/
 
     return true;
 }
