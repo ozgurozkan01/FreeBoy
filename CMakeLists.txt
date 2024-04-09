@@ -7,6 +7,8 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/freeboy/cmake)
 find_package(SDL2 CONFIG REQUIRED)
 
 include_directories(${SDL2_INCLUDE_DIR})
-add_executable(FreeBoy main.cpp)
+add_executable(FreeBoy main.cpp
+        freeboy/src/Cartridge.cpp
+        freeboy/include/Cartridge.h)
 
 target_link_libraries(FreeBoy ${SDL2_LIBRARY} -lmingw32 -lSDL2main -lSDL2 -mwindows)
