@@ -8,7 +8,7 @@
 #include <cstdint>
 #include <iostream>
 
-namespace gameboy
+namespace utility
 {
     static void bitSet(int& _variable, int _shifting) { _variable |= 1 << _shifting; }
     static void bitReset(int& _variable, int _shifting) { _variable &= ~(1 << _shifting); }
