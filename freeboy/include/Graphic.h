@@ -8,22 +8,21 @@
 
 #include "SDL2/SDL.h"
 
-class Cartridge;
+namespace gameboy
+{
+    class Graphic {
+    public:
+        Graphic(const int windowWidth, const int windowHeigth, const char* windowName);
+        bool init();
+    private:
+        const int windowWidth;
+        const int windowHeight;
+        const char* windowName;
 
-class Graphic {
-public:
-    Graphic(const int windowWidth, const int windowHeigth, const char* windowName);
-    bool init();
-private:
-    const int windowWidth;
-    const int windowHeight;
-    const char* windowName;
-
-    SDL_Window* mainWindow;
-    SDL_Renderer* renderer;
-    SDL_Texture* texture;
-
-    Cartridge* cartridge;
-};
+        SDL_Window* mainWindow;
+        SDL_Renderer* renderer;
+        SDL_Texture* texture;
+    };
+}
 
 #endif //FREEBOY_GRAPHIC_H
