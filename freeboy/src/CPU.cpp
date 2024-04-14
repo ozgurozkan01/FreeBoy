@@ -3,3 +3,13 @@
 //
 
 #include "../include/CPU.h"
+
+namespace gameboy
+{
+    CPU::CPU() {}
+
+    bool CPU::init()
+    {
+        return false;
+    }
+}
