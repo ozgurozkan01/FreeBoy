@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include "Register.h"
+#include "Instruction.h"
 
 namespace gameboy
 {
