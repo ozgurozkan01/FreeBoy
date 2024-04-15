@@ -36,6 +36,8 @@ namespace gameboy
         Register16 BC; // B -> high, C -> low
         Register16 DE; // D -> high, E -> low
         Register16 HL; // H -> high, L -> low
+
+        Instruction instructionSet;
     };
 }
 
