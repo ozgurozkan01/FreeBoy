@@ -8,28 +8,34 @@
 
 #include <cstdint>
 
-enum class EmulatorState : uint8_t
+namespace gameboy
 {
-    PAUSE,
-    RUNNING,
-    QUIT
-};
+    class Graphic;
+    class Cartridge;
 
-class Graphic;
+    enum class EmulatorState : uint8_t
+    {
+        PAUSE,
+        RUNNING,
+        QUIT
+    };
 
-class GameBoy {
-public:
-    GameBoy();
-    bool init();
-    void run();
-private:
-    EmulatorState emulatorState;
+    class GameBoy {
+    public:
+        GameBoy();
+        ~GameBoy();
+        bool init();
+        void run();
+    private:
+        EmulatorState emulatorState;
 
-    Graphic* graphic;
-    uint64_t ticks;
-    void processEvent();
-};
+        Graphic* graphic;
+        Cartridge* cartridge;
 
+        uint64_t ticks;
+        void processEvent();
+    };
 
+}
 
 #endif //FREEBOY_GAMEBOY_H
