@@ -7,7 +7,7 @@
 
 #include <cstdint>
 
-namespace gameboy
+namespace gameboy::registers
 {
     // Registers in GB are 8 and 16-bit
     class Register8
