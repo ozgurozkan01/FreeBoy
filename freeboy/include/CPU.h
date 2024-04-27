@@ -11,6 +11,8 @@
 
 namespace gameboy
 {
+    class Bus;
+
     enum class FLAG_TYPE : uint8_t
     {
         // LOWER 8 BITS OF AF
@@ -23,21 +25,36 @@ namespace gameboy
 
     class CPU {
     public:
-        CPU();
+        CPU(Bus* _bus);
         bool init();
     private:
-        uint16_t fetchData; // get the data for decoding
+        uint8_t currentOpcode;
 
-        Register16 PC; // program counter
-        Register16 SP; // stack pointer
+        registers::Register16 PC; // program counter
+        registers::Register16 SP; // stack pointer
         /* accumulator register */
-        Register16 AF; // A -> high, ZNHC0000 -> low
+        registers::Register16 AF; // A -> high, ZNHC0000 -> low
         /* general purpose register */
-        Register16 BC; // B -> high, C -> low
-        Register16 DE; // D -> high, E -> low
-        Register16 HL; // H -> high, L -> low
+        registers::Register16 BC; // B -> high, C -> low
+        registers::Register16 DE; // D -> high, E -> low
+        registers::Register16 HL; // H -> high, L -> low
 
-        Instruction instructionSet;
+        Instruction currentInstraction;
+        Bus* busRef;
+
+        bool isStopped;
+        bool isHalted;
+
+        void step();
+
+        /* Instruction Methods */
+        void nop();
+
+        // LD Instructions
+        [[maybe_unused]] void ld(registers::Register8& _register, uint8_t _data);
+        [[maybe_unused]] void ld(registers::Register8& r_target, const registers::Register8& r_source);
+        [[maybe_unused]] void ld(registers::Register16& _register, uint16_t _data);
+        [[maybe_unused]] void ld(registers::Register16& r_target, const registers::Register16& r_source);
     };
 }
 
