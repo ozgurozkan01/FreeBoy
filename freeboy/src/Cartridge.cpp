@@ -199,7 +199,7 @@ namespace gameboy
 
     }
 
-    void Cartridge::cartridgeWrite(const uint16_t &address, const uint8_t &value) {}
-    uint8_t Cartridge::cartridgeRead(const uint16_t &address) { return 0; }
+    void Cartridge::cartridgeWrite(const registers::Register16& address, const uint8_t &value) {}
+    uint8_t Cartridge::cartridgeRead(const registers::Register16& address) { return 0; }
 
 }
