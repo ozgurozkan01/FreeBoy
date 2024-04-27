@@ -5,10 +5,11 @@
 #ifndef FREEBOY_JOYPAD_H
 #define FREEBOY_JOYPAD_H
 
+namespace gameboy
+{
+    class Joypad {
 
-class Joypad {
-
-};
-
+    };
+}
 
 #endif //FREEBOY_JOYPAD_H
