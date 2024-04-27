@@ -7,7 +7,7 @@
 namespace gameboy
 {
     Graphic::Graphic(const int windowWidth, const int windowHeigth, const char *windowName) :
-            windowWidth(windowWidth), windowHeight(windowHeigth), windowName(windowName)
+            WINDOW_WIDTH(windowWidth), WINDOW_HEIGHT(windowHeigth), WINDOW_NAME(windowName), WINDOW_SCALE_MULTIPLIER(5)
     {
     }
 
@@ -19,10 +19,11 @@ namespace gameboy
             return false;
         }
 
-        mainWindow = SDL_CreateWindow(windowName,
+        mainWindow = SDL_CreateWindow(WINDOW_NAME,
                                       SDL_WINDOWPOS_UNDEFINED,
                                       SDL_WINDOWPOS_UNDEFINED,
-                                      windowWidth, windowHeight,
+                                      WINDOW_WIDTH * WINDOW_SCALE_MULTIPLIER ,
+                                      WINDOW_HEIGHT * WINDOW_SCALE_MULTIPLIER,
                                       0);
 
         if (mainWindow == nullptr)
@@ -44,8 +45,8 @@ namespace gameboy
         texture = SDL_CreateTexture(renderer,
                                     SDL_PixelFormatEnum::SDL_PIXELFORMAT_RGBA8888,
                                     SDL_TextureAccess::SDL_TEXTUREACCESS_TARGET,
-                                    windowWidth,
-                                    windowHeight);
+                                    WINDOW_WIDTH,
+                                    WINDOW_HEIGHT);
 
         if (texture == nullptr)
         {

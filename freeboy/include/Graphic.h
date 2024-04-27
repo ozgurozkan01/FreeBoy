@@ -15,9 +15,10 @@ namespace gameboy
         Graphic(const int windowWidth, const int windowHeigth, const char* windowName);
         bool init();
     private:
-        const int windowWidth;
-        const int windowHeight;
-        const char* windowName;
+        const int WINDOW_SCALE_MULTIPLIER;
+        const int WINDOW_WIDTH;
+        const int WINDOW_HEIGHT;
+        const char* WINDOW_NAME;
 
         SDL_Window* mainWindow;
         SDL_Renderer* renderer;
