@@ -15,6 +15,15 @@ add_executable(FreeBoy main.cpp
         freeboy/src/Graphic.cpp
         freeboy/include/Graphic.h
         freeboy/src/Bus.cpp
-        freeboy/include/Bus.h)
+        freeboy/include/Bus.h
+        freeboy/include/util/Utility.h
+        freeboy/src/CPU.cpp
+        freeboy/include/CPU.h
+        freeboy/src/Instruction.cpp
+        freeboy/include/Instruction.h
+        freeboy/src/Register.cpp
+        freeboy/include/Register.h
+        freeboy/src/Joypad.cpp
+        freeboy/include/Joypad.h)
 
 target_link_libraries(FreeBoy ${SDL2_LIBRARY} -lmingw32 -lSDL2main -lSDL2 -mwindows)
