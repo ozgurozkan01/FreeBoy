@@ -12,6 +12,8 @@ namespace gameboy
 {
     class Graphic;
     class Cartridge;
+    class Bus;
+    class CPU;
 
     enum class EmulatorState : uint8_t
     {
@@ -21,6 +23,7 @@ namespace gameboy
     };
 
     class GameBoy {
+        friend class CPU;
     public:
         GameBoy();
         ~GameBoy();
@@ -31,9 +34,12 @@ namespace gameboy
 
         Graphic* graphic;
         Cartridge* cartridge;
+        CPU* cpu;
+        Bus* bus;
 
         uint64_t ticks;
         void processEvent();
+        void emulateCycles(uint8_t cycleCount);
     };
 
 }
