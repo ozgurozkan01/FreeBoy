@@ -5,31 +5,40 @@
 #include "../include/GameBoy.h"
 #include "../include/Graphic.h"
 #include "../include/Cartridge.h"
+#include "../include/Bus.h"
+#include "../include/CPU.h"
 #include <cstdio>
 
 namespace gameboy
 {
     GameBoy::GameBoy() :
-            graphic(new Graphic(160, 144, "GameBoy-Emulator")),
-            emulatorState(EmulatorState::RUNNING),
-            cartridge(new Cartridge())
-    {
-    }
+    emulatorState(EmulatorState::RUNNING)
+    {}
 
     bool GameBoy::init()
     {
+        graphic = new Graphic(160, 144, "GameBoy-Emulator");
         if (!graphic->init())
         {
             printf("ERROR : Graphics could not be loaded!");
             return false;
         }
 
-        if (!cartridge->loadCartridge("C:/Users/ozgur/GitHub/FreeBoy/ROMs/dmg-acid2.gb"))
+        cartridge = new Cartridge();
+        if (!cartridge->loadCartridge("C:/Users/ozgur/GitHub/FreeBoy/ROMs/cpu_instrs.gb"))
         {
             printf("Cartridge could not be created! Error code %s\n", SDL_GetError());
             return false;
         }
 
+        bus = new Bus(cartridge);
+
+        cpu = new CPU(bus, this);
+        if (!cpu->init())
+        {
+            printf("ERROR : CPU could not be initialized!");
+            return false;
+        }
 
         return true;
     }
@@ -38,6 +47,7 @@ namespace gameboy
     {
         while (emulatorState != EmulatorState::QUIT)
         {
+            cpu->step();
             processEvent();
             ticks++;
         }
@@ -67,8 +77,15 @@ namespace gameboy
 
     GameBoy::~GameBoy()
     {
+        delete cpu;
+        delete bus;
         delete cartridge;
         delete graphic;
+    }
+
+    void GameBoy::emulateCycles(uint8_t cycleCount)
+    {
+        // TODO : increment cycle
     }
 
 }
