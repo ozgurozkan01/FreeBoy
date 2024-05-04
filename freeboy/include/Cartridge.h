@@ -8,7 +8,6 @@
 
 #include <cstdint>
 #include <string>
-#include "Register.h"
 
 namespace gameboy
 {
@@ -32,13 +31,13 @@ namespace gameboy
 
     class Cartridge {
     public:
-        Cartridge();
-        ~Cartridge();
+        Cartridge() = default;
+        ~Cartridge() = default;
         bool loadCartridge(const std::string& cartridgeName);
 
         //void writeHeader();
-        void writeCartridge(const uint16_t & address, const uint8_t& value);
-        [[maybe_unused]] uint8_t readCartridge(const uint16_t & address);
+        void writeCartridge(uint16_t address,  uint8_t value);
+        [[maybe_unused]] uint8_t readCartridge(uint16_t address);
     private:
         uint32_t romSize{};
         uint8_t* romData{};
