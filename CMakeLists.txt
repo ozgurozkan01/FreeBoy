@@ -21,8 +21,6 @@ add_executable(FreeBoy main.cpp
         freeboy/include/CPU.h
         freeboy/src/Instruction.cpp
         freeboy/include/Instruction.h
-        freeboy/src/Register.cpp
-        freeboy/include/Register.h
         freeboy/src/Joypad.cpp
         freeboy/include/Joypad.h)
 
