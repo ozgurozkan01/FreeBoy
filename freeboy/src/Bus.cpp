@@ -36,6 +36,6 @@ namespace gameboy
     bool Bus::isMemoryAddressExist(uint16_t address)
     {
         // 0x7FFF is the last address on the memory
-        return address < 0x2000;
+        return address < 0x8000;
     }
 }
