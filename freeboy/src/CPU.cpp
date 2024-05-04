@@ -13,16 +13,16 @@ namespace gameboy
 
     bool CPU::init()
     {
-        registers.A = 0x01;
-        registers.F = 0xB0;
-        registers.B = 0x00;
-        registers.C = 0x13;
-        registers.D = 0x00;
-        registers.E = 0xD8;
-        registers.H = 0x01;
-        registers.L = 0x4D;
-        registers.PC = 0x0100;
-        registers.SP = 0xFFFE;
+        coreRegisters.A = 0x01;
+        coreRegisters.F = 0xB0;
+        coreRegisters.B = 0x00;
+        coreRegisters.C = 0x13;
+        coreRegisters.D = 0x00;
+        coreRegisters.E = 0xD8;
+        coreRegisters.H = 0x01;
+        coreRegisters.L = 0x4D;
+        coreRegisters.PC = 0x0100;
+        coreRegisters.SP = 0xFFFE;
 
         isHalted = false;
         isStopped = false;
@@ -33,7 +33,7 @@ namespace gameboy
     {
         if (!isHalted)
         {
-            uint16_t pc = registers.PC;
+            uint16_t pc = coreRegisters.PC;
             fetch();
             printf("Execution Instruction : %02X    PC : %04X\n", currentOpcode, pc);
             execute();
@@ -42,7 +42,7 @@ namespace gameboy
 
     void CPU::fetch()
     {
-        currentOpcode = busRef->busRead(registers.PC++);
+        currentOpcode = busRef->busRead(coreRegisters.PC++);
         currentInstraction = instruction::STANDART_INSTRUCTIONS[currentOpcode];
     }
 
@@ -62,9 +62,9 @@ namespace gameboy
                 fetchedData = readRegister(currentInstraction.dstRegister);
                 break;
             case instruction::AddressMode::R_D8:
-                fetchedData = busRef->busRead(registers.PC);
+                fetchedData = busRef->busRead(coreRegisters.PC);
                 gameBoyRef->emulateCycles(1);
-                registers.PC++;
+                coreRegisters.PC++;
                 return;
             case instruction::AddressMode::R_MR:
                 return;
@@ -84,12 +84,12 @@ namespace gameboy
                 return;
             case instruction::AddressMode::D16:
             {
-                uint16_t low = busRef->busRead(registers.PC);
+                uint16_t low = busRef->busRead(coreRegisters.PC);
                 gameBoyRef->emulateCycles(1);
-                uint16_t high = busRef->busRead(registers.PC + 1);
+                uint16_t high = busRef->busRead(coreRegisters.PC + 1);
                 gameBoyRef->emulateCycles(1);
                 fetchedData = high << 8 | low;
-                registers.PC += 2;
+                coreRegisters.PC += 2;
                 return;
             }
             case instruction::AddressMode::D8:
@@ -112,22 +112,21 @@ namespace gameboy
         switch (_register)
         {
             case instruction::RegisterType::NONE: return 0;
-            case instruction::RegisterType::A: return registers.A;
-            case instruction::RegisterType::F: return registers.F;
-            case instruction::RegisterType::B: return registers.B;
-            case instruction::RegisterType::C: return registers.C;
-            case instruction::RegisterType::D: return registers.D;
-            case instruction::RegisterType::E: return registers.E;
-            case instruction::RegisterType::H: return registers.H;
-            case instruction::RegisterType::L: return registers.L;
-            case instruction::RegisterType::SP: return registers.SP;
-            case instruction::RegisterType::PC: return registers.PC;
-            case instruction::RegisterType::AF: return ((registers.A << 8) | registers.F);
-            case instruction::RegisterType::BC: return ((registers.B << 8) | registers.C);
-            case instruction::RegisterType::DE: return ((registers.D << 8) | registers.E);
-            case instruction::RegisterType::HL: return ((registers.H << 8) | registers.L);
+            case instruction::RegisterType::A: return coreRegisters.A;
+            case instruction::RegisterType::F: return coreRegisters.F;
+            case instruction::RegisterType::B: return coreRegisters.B;
+            case instruction::RegisterType::C: return coreRegisters.C;
+            case instruction::RegisterType::D: return coreRegisters.D;
+            case instruction::RegisterType::E: return coreRegisters.E;
+            case instruction::RegisterType::H: return coreRegisters.H;
+            case instruction::RegisterType::L: return coreRegisters.L;
+            case instruction::RegisterType::SP: return coreRegisters.SP;
+            case instruction::RegisterType::PC: return coreRegisters.PC;
+            case instruction::RegisterType::AF: return ((coreRegisters.A << 8) | coreRegisters.F);
+            case instruction::RegisterType::BC: return ((coreRegisters.B << 8) | coreRegisters.C);
+            case instruction::RegisterType::DE: return ((coreRegisters.D << 8) | coreRegisters.E);
+            case instruction::RegisterType::HL: return ((coreRegisters.H << 8) | coreRegisters.L);
         }
-
         return 0;
     }
 
@@ -136,31 +135,31 @@ namespace gameboy
         switch (_register)
         {
             case instruction::RegisterType::NONE: return;
-            case instruction::RegisterType::A: registers.A = _value & 0xFF; return;
-            case instruction::RegisterType::F: registers.F = _value & 0xFF; return;
-            case instruction::RegisterType::B: registers.B = _value & 0xFF; return;
-            case instruction::RegisterType::C: registers.C = _value & 0xFF; return;
-            case instruction::RegisterType::D: registers.D = _value & 0xFF; return;
-            case instruction::RegisterType::E: registers.E = _value & 0xFF; return;
-            case instruction::RegisterType::H: registers.H = _value & 0xFF; return;
-            case instruction::RegisterType::L: registers.L = _value & 0xFF; return;
-            case instruction::RegisterType::SP: registers.SP = _value; return;
-            case instruction::RegisterType::PC: registers.PC = _value; return;
+            case instruction::RegisterType::A: coreRegisters.A = _value & 0xFF; return;
+            case instruction::RegisterType::F: coreRegisters.F = _value & 0xFF; return;
+            case instruction::RegisterType::B: coreRegisters.B = _value & 0xFF; return;
+            case instruction::RegisterType::C: coreRegisters.C = _value & 0xFF; return;
+            case instruction::RegisterType::D: coreRegisters.D = _value & 0xFF; return;
+            case instruction::RegisterType::E: coreRegisters.E = _value & 0xFF; return;
+            case instruction::RegisterType::H: coreRegisters.H = _value & 0xFF; return;
+            case instruction::RegisterType::L: coreRegisters.L = _value & 0xFF; return;
+            case instruction::RegisterType::SP: coreRegisters.SP = _value; return;
+            case instruction::RegisterType::PC: coreRegisters.PC = _value; return;
             case instruction::RegisterType::AF:
-                registers.A = (_value >> 8 & 0xFF);
-                registers.F = _value & 0xFF;
+                coreRegisters.A = (_value >> 8 & 0xFF);
+                coreRegisters.F = _value & 0xFF;
                 return;
             case instruction::RegisterType::BC:
-                registers.B = (_value >> 8 & 0xFF);
-                registers.C = _value & 0xFF;
+                coreRegisters.B = (_value >> 8 & 0xFF);
+                coreRegisters.C = _value & 0xFF;
                 return;
             case instruction::RegisterType::DE:
-                registers.D = (_value >> 8 & 0xFF);
-                registers.E = _value & 0xFF;
+                coreRegisters.D = (_value >> 8 & 0xFF);
+                coreRegisters.E = _value & 0xFF;
                 return;
             case instruction::RegisterType::HL:
-                registers.H = (_value >> 8 & 0xFF);
-                registers.L = _value & 0xFF;
+                coreRegisters.H = (_value >> 8 & 0xFF);
+                coreRegisters.L = _value & 0xFF;
                 return;
         }
     }

@@ -52,7 +52,7 @@ namespace gameboy
         uint16_t fetchedData{}; //
         uint16_t memoryDestination{}; //
 
-        CoreRegisters registers{};
+        CoreRegisters coreRegisters{};
         instruction::Instruction currentInstraction;
 
         Bus* busRef;
