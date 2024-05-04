@@ -12,8 +12,11 @@
 namespace gameboy
 {
     class Bus;
+    class GameBoy;
 
-    enum class FLAG_TYPE : uint8_t
+    // The CPU flags are used to get information about the results of arithmetic and logical operations,
+    // and to activate conditional branching
+    enum class FlagType : uint8_t
     {
         // LOWER 8 BITS OF AF
         NONE = 0x0,
@@ -23,38 +26,49 @@ namespace gameboy
         CARRY_FLAG = 1 << 4
     };
 
+    struct CoreRegisters
+    {
+        uint8_t A; // Accumulator Register -> Holds result of logical, arithmetic op and data
+        uint8_t F; // Flag-Status Register -> ZNHC0000
+        // General Purpose Register
+        uint8_t B;
+        uint8_t C;
+        uint8_t D;
+        uint8_t E;
+        uint8_t H;
+        uint8_t L;
+        uint16_t PC; // Program Counter -> Holds address of the next instruction
+        uint16_t SP; // Stack Pointer -> Holds address of the last added element into the stack
+    };
+
     class CPU {
     public:
-        CPU(Bus* _bus);
+
+        CPU(Bus* _bus, GameBoy* _gb);
         bool init();
-    private:
-        uint8_t currentOpcode;
-
-        registers::Register16 PC; // program counter
-        registers::Register16 SP; // stack pointer
-        /* accumulator register */
-        registers::Register16 AF; // A -> high, ZNHC0000 -> low
-        /* general purpose register */
-        registers::Register16 BC; // B -> high, C -> low
-        registers::Register16 DE; // D -> high, E -> low
-        registers::Register16 HL; // H -> high, L -> low
-
-        Instruction currentInstraction;
-        Bus* busRef;
-
-        bool isStopped;
-        bool isHalted;
-
         void step();
 
-        /* Instruction Methods */
-        void nop();
+    private:
+        uint8_t currentOpcode{}; // 8-bit Instruction
+        uint16_t fetchedData{}; //
+        uint16_t memoryDestination{}; //
 
-        // LD Instructions
-        [[maybe_unused]] void ld(registers::Register8& _register, uint8_t _data);
-        [[maybe_unused]] void ld(registers::Register8& r_target, const registers::Register8& r_source);
-        [[maybe_unused]] void ld(registers::Register16& _register, uint16_t _data);
-        [[maybe_unused]] void ld(registers::Register16& r_target, const registers::Register16& r_source);
+        CoreRegisters registers{};
+        instruction::Instruction currentInstraction;
+
+        Bus* busRef;
+        GameBoy* gameBoyRef;
+
+        bool isStopped{};
+        bool isHalted{};
+
+        void fetch();
+        void execute();
+
+        // Switching from register enum to register variable
+        uint16_t readRegister(instruction::RegisterType _register) const;
+        // Set specific register current value
+        void writeRegister(instruction::RegisterType _register, uint16_t _value);
     };
 }
 
