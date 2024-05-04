@@ -6,7 +6,6 @@
 #define FREEBOY_CPU_H
 
 #include <cstdint>
-#include "Register.h"
 #include "Instruction.h"
 
 namespace gameboy
