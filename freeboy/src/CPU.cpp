@@ -35,7 +35,7 @@ namespace gameboy
         {
             uint16_t pc = coreRegisters.PC;
             fetch();
-            printf("Execution Instruction : %02X    PC : %04X\n", currentOpcode, pc);
+            //printf("Execution Instruction : %02X    PC : %04X\n", currentOpcode, pc);
             execute();
         }
     }
@@ -43,12 +43,12 @@ namespace gameboy
     void CPU::fetch()
     {
         currentOpcode = busRef->busRead(coreRegisters.PC++);
-        currentInstraction = instruction::STANDART_INSTRUCTIONS[currentOpcode];
+        currentInstruction = instruction::STANDARD_INSTRUCTIONS[currentOpcode];
     }
 
     void CPU::execute()
     {
-        switch (currentInstraction.addrMode)
+        switch (currentInstruction.addrMode)
         {
             case instruction::AddressMode::IMP:
                 break;
@@ -59,10 +59,11 @@ namespace gameboy
             case instruction::AddressMode::MR_R:
                 break;
             case instruction::AddressMode::R:
-                fetchedData = readRegister(currentInstraction.dstRegister);
+                fetchedData = readRegister(currentInstruction.dstRegister);
                 break;
             case instruction::AddressMode::R_D8:
                 fetchedData = busRef->busRead(coreRegisters.PC);
+                // gameBoyRef->emulateCycles(currentInstraction.cycleCount);
                 gameBoyRef->emulateCycles(1);
                 coreRegisters.PC++;
                 return;
@@ -90,6 +91,7 @@ namespace gameboy
                 gameBoyRef->emulateCycles(1);
                 fetchedData = high << 8 | low;
                 coreRegisters.PC += 2;
+                // gameBoyRef->emulateCycles(currentInstraction.cycleCount);
                 return;
             }
             case instruction::AddressMode::D8:
