@@ -6,7 +6,7 @@
 #define FREEBOY_CPU_H
 
 #include <cstdint>
-#include "Instruction.h"
+#include "../include/CPU_Instructions.h"
 
 namespace gameboy
 {
@@ -46,14 +46,13 @@ namespace gameboy
         CPU(Bus* _bus, GameBoy* _gb);
         bool init();
         void step();
-
     private:
         uint8_t currentOpcode{}; // 8-bit Instruction
         uint16_t fetchedData{}; //
         uint16_t memoryDestination{}; //
 
         CoreRegisters coreRegisters{};
-        instruction::Instruction currentInstraction;
+        instruction::InstructionHeader currentInstruction;
 
         Bus* busRef;
         GameBoy* gameBoyRef;
@@ -65,7 +64,7 @@ namespace gameboy
         void execute();
 
         // Switching from register enum to register variable
-        uint16_t readRegister(instruction::RegisterType _register) const;
+        [[nodiscard]] uint16_t readRegister(instruction::RegisterType _register) const;
         // Set specific register current value
         void writeRegister(instruction::RegisterType _register, uint16_t _value);
     };
