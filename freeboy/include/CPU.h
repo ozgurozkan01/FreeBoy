@@ -6,7 +6,7 @@
 #define FREEBOY_CPU_H
 
 #include <cstdint>
-#include "../include/CPU_Instructions.h"
+#include "../include/Instructions.h"
 
 namespace gameboy
 {
@@ -52,7 +52,8 @@ namespace gameboy
         uint16_t memoryDestination{}; //
 
         CoreRegisters coreRegisters{};
-        instruction::InstructionHeader currentInstruction;
+        instruction::Instructions* cpuInstructions;
+        instruction::Info currentInstruction;
 
         Bus* busRef;
         GameBoy* gameBoyRef;

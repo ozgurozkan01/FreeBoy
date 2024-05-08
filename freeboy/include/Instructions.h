@@ -9,8 +9,8 @@
 #include <array>
 
 namespace gameboy::instruction
-{
-    class CPU;
+{    class CPU;
+
     enum class AddressMode : uint8_t
     {
         IMP,
@@ -117,21 +117,6 @@ namespace gameboy::instruction
         Z       // Execute if Z is set.
     };
 
-    class CPU_Instructions;
-
-    struct InstructionHeader
-    {
-        uint8_t byteLength = 0u;
-        uint8_t cycleCount = 0u; // CycleCount : Duration in T-states / 4 !!!
-        void (CPU_Instructions::*addrFunction)(CPU* cpu);
-        InstructionType InfoType = InstructionType::NONE;
-        AddressMode addrMode = AddressMode::IMP;
-        RegisterType dstRegister = RegisterType::NONE;
-        RegisterType srcRegister = RegisterType::NONE;
-        ConditionCode condition = ConditionCode::NONE;
-        uint8_t param = 0u; // For RST Info
-    };
-
     class CPU_Instructions
     {
     public:
@@ -141,6 +126,20 @@ namespace gameboy::instruction
         void XOR(CPU* _cpu);
         void DEC(CPU* _cpu);
     };
+
+    struct InstructionHeader
+    {
+        uint8_t byteLength = 0u;
+        uint8_t cycleCount = 0u; // CycleCount : Duration in T-states / 4 !!!
+        void (CPU_Instructions::*addrFunction)(CPU*);
+        InstructionType InfoType = InstructionType::NONE;
+        AddressMode addrMode = AddressMode::IMP;
+        RegisterType dstRegister = RegisterType::NONE;
+        RegisterType srcRegister = RegisterType::NONE;
+        ConditionCode condition = ConditionCode::NONE;
+        uint8_t param = 0u; // For RST Info
+    };
+
 
     static constexpr std::array<InstructionHeader, 0x100> STANDARD_INSTRUCTIONS
             {
