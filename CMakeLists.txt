@@ -19,8 +19,8 @@ add_executable(FreeBoy main.cpp
         freeboy/include/util/Utility.h
         freeboy/src/CPU.cpp
         freeboy/include/CPU.h
-        freeboy/src/CPU_Instructions.cpp
-        freeboy/include/CPU_Instructions.h
+        freeboy/src/Instructions.cpp
+        freeboy/include/Instructions.h
         freeboy/src/Joypad.cpp
         freeboy/include/Joypad.h
 )
