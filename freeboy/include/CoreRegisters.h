@@ -24,37 +24,55 @@ namespace gameboy
             CARRY_FLAG = 1 << 4
         };
 
-
-        class Register8
+        class CoreRegisters
         {
         public:
-            Register8() = default;
+            CoreRegisters() = default;
+            [[maybe_unused]] uint8_t getFlagZ() const;
+            [[maybe_unused]] uint8_t getFlagN() const;
+            [[maybe_unused]] uint8_t getFlagH() const;
+            [[maybe_unused]] uint8_t getFlagC() const;
 
-            // GETTERS
-            [[maybe_unused]] [[nodiscard]] uint8_t getData() const;
-            // SETTERS
-            [[maybe_unused]] void setData(uint8_t _data);
+            uint16_t getAF() const;
+            uint16_t getBC() const;
+            uint16_t getDE() const;
+            uint16_t getHL() const;
+            uint16_t getSP() const;
+            uint16_t getPC() const;
 
+            uint8_t getA() const;
+            uint8_t getF() const;
+            uint8_t getB() const;
+            uint8_t getC() const;
+            uint8_t getD() const;
+            uint8_t getE() const;
+            uint8_t getH() const;
+            uint8_t getL() const;
+
+            void setA(const uint8_t _data);
+            void setF(const uint8_t _data);
+            void setB(const uint8_t _data);
+            void setC(const uint8_t _data);
+            void setD(const uint8_t _data);
+            void setE(const uint8_t _data);
+            void setH(const uint8_t _data);
+            void setL(const uint8_t _data);
+            void setPC(const uint16_t _data);
+            void setSP(const uint16_t _data);
+
+            void increasePC(uint16_t _data);
+            void increaseSP(uint16_t _data);
         private:
-            uint8_t data;
-        };
-
-        class Register16
-        {
-        public:
-            Register16() = default;
-
-            // GETTERS
-            [[maybe_unused]] [[nodiscard]] uint8_t lowValue() const;
-            [[maybe_unused]] [[nodiscard]] uint8_t highValue() const;
-            [[maybe_unused]] [[nodiscard]] uint16_t getData() const;
-            [[maybe_unused]] [[nodiscard]] const Register8& lowRegister() const;
-            [[maybe_unused]] [[nodiscard]] const Register8& highRegister() const;
-            // SETTERS
-            [[maybe_unused]] void setData(uint16_t _data);
-        private:
-            Register8 high;
-            Register8 low;
+            uint8_t A;
+            uint8_t F;
+            uint8_t B;
+            uint8_t C;
+            uint8_t D;
+            uint8_t E;
+            uint8_t H;
+            uint8_t L;
+            uint16_t PC;
+            uint16_t SP;
         };
     }
 }
