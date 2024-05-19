@@ -112,7 +112,7 @@ namespace gameboy
             {0xA4, "Konami (Yu-Gi-Oh!)"}
     };
 
-    bool Cartridge::loadCartridge(const std::string& cartridgeName)
+    bool Cartridge::load(const std::string& cartridgeName)
     {
         std::ifstream cartridgeFile(cartridgeName, std::ios::binary);
 
@@ -160,7 +160,6 @@ namespace gameboy
         }
 
         return "UNKNOWN";
-        exit(-1);
     }
 
     std::string Cartridge::getCartridgeLicence()
@@ -174,7 +173,6 @@ namespace gameboy
             }
         }
         return "UNKNOWN";
-        exit(-1);
     }
 
     bool Cartridge::isChecksumPassed()
@@ -189,6 +187,6 @@ namespace gameboy
         return  romHeader->headerChecksum == (checksum & 0xFF);
     }
 
-    void Cartridge::writeCartridge(uint16_t address, uint8_t value) { }
-    uint8_t Cartridge:: readCartridge(uint16_t address) { return romData[address]; }
+    void Cartridge::write(uint16_t address, uint8_t value) { }
+    uint8_t Cartridge:: read(uint16_t address) { return romData[address]; }
 }

@@ -33,11 +33,11 @@ namespace gameboy
     public:
         Cartridge() = default;
         ~Cartridge() = default;
-        bool loadCartridge(const std::string& cartridgeName);
+        bool load(const std::string& cartridgeName);
 
         //void writeHeader();
-        void writeCartridge(uint16_t address,  uint8_t value);
-        [[maybe_unused]] uint8_t readCartridge(uint16_t address);
+        void write(uint16_t address, uint8_t value);
+        [[maybe_unused]] uint8_t read(uint16_t address);
     private:
         uint32_t romSize{};
         uint8_t* romData{};
