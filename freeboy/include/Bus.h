@@ -16,7 +16,6 @@ namespace gameboy
         Bus(Cartridge* _cartridge);
         ~Bus();
 
-        [[nodiscard]] static bool isMemoryAddressExist(uint16_t address);
         void busWrite(uint16_t  address, uint8_t value);
         uint8_t busRead(uint16_t  address);
     private:

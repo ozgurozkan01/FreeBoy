@@ -12,9 +12,9 @@ namespace gameboy
 
     void Bus::busWrite(const uint16_t address, const uint8_t value)
     {
-        if (isMemoryAddressExist(address))
+        if (address < 0x8000)
         {
-            cartridgeRef->writeCartridge(address, value);
+            cartridgeRef->write(address, value);
             return;
         }
 
@@ -24,18 +24,12 @@ namespace gameboy
 
     uint8_t Bus::busRead(uint16_t address)
     {
-        if (isMemoryAddressExist(address))
+        if (address < 0x8000)
         {
-            return cartridgeRef->readCartridge(address);
+            return cartridgeRef->read(address);
         }
 
         printf("Address does not avaible to read !\n");
         exit(-1);
-    }
-
-    bool Bus::isMemoryAddressExist(uint16_t address)
-    {
-        // 0x7FFF is the last address on the memory
-        return address < 0x8000;
     }
 }
