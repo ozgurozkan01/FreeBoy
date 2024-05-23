@@ -10,7 +10,7 @@ namespace gameboy
     Bus::Bus(Cartridge* _cartridge) : cartridgeRef(_cartridge) {}
     Bus::~Bus() {}
 
-    void Bus::busWrite(const uint16_t address, const uint8_t value)
+    void Bus::write(uint16_t address, uint8_t value)
     {
         if (address < 0x8000)
         {
@@ -22,7 +22,7 @@ namespace gameboy
         exit(-1);
     }
 
-    uint8_t Bus::busRead(uint16_t address)
+    uint8_t Bus::read(uint16_t address)
     {
         if (address < 0x8000)
         {
