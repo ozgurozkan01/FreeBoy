@@ -10,7 +10,7 @@ namespace gameboy
     Bus::Bus(Cartridge* _cartridge) : cartridgeRef(_cartridge) {}
     Bus::~Bus() {}
 
-    void Bus::write(uint16_t address, uint8_t value)
+    void Bus::write8(uint16_t address, uint8_t value)
     {
         if (address < 0x8000)
         {
@@ -19,10 +19,15 @@ namespace gameboy
         }
 
         printf("Address does not avaible to write !\n");
-        exit(-1);
     }
 
-    uint8_t Bus::read(uint16_t address)
+    void Bus::write16(uint16_t address, uint16_t value)
+    {
+        write8(address + 1, (value >> 8) & 0xFF);
+        write8(address, value & 0xFF);
+    }
+
+    uint8_t Bus::read8(uint16_t address)
     {
         if (address < 0x8000)
         {
@@ -30,6 +35,14 @@ namespace gameboy
         }
 
         printf("Address does not avaible to read !\n");
-        exit(-1);
+        return -1;
+    }
+
+    uint16_t Bus::read16(uint16_t address)
+    {
+        uint16_t low = read8(address);
+        uint16_t high = read8(address + 1);
+
+        return low | (high << 8);
     }
 }
