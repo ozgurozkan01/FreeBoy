@@ -25,6 +25,8 @@ add_executable(FreeBoy main.cpp
         freeboy/include/Joypad.h
         freeboy/src/InterruptHandler.cpp
         freeboy/include/InterruptHandler.h
+        freeboy/src/RAM.cpp
+        freeboy/include/RAM.h
 )
 
 target_link_libraries(FreeBoy ${SDL2_LIBRARY} -lmingw32 -lSDL2main -lSDL2 -mwindows)
