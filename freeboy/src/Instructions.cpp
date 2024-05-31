@@ -23,7 +23,7 @@ namespace gameboy
                             Info{1, 4, &CPU::dec, &CPU::addr_R, RegisterType::B}, // 0x05
                             Info{2, 8, &CPU::ld, &CPU::addr_R_D8, RegisterType::B}, // 0x06
                             Info{}, // 0X07
-                            Info{3, 20, &CPU::ld, &CPU::addr_A16_R, RegisterType::NONE, RegisterType::A}, // 0X08
+                            Info{3, 20, &CPU::ld, &CPU::addr_A16_R, RegisterType::NONE, RegisterType::SP}, // 0X08
                             Info{}, // 0x09
                             Info{1, 8, &CPU::ld, &CPU::addr_R_MR, RegisterType::A, RegisterType::BC}, // 0x0A
                             Info{}, // 0x0B
@@ -57,11 +57,11 @@ namespace gameboy
                             Info{}, // 0x23
                             Info{}, // 0x24
                             Info{1, 4, &CPU::dec, &CPU::addr_R, RegisterType::H}, // 0x25
-                            Info{2, 8, &CPU::ld, &CPU::addr_R_HLI, RegisterType::A, RegisterType::HL}, // 0x26
+                            Info{2, 8, &CPU::ld, &CPU::addr_R_D8, RegisterType::H}, // 0x26
                             Info{}, // 0x27
                             Info{}, // 0x28
                             Info{}, // 0x29
-                            Info{1, 8, &CPU::ld, &CPU::addr_R_D8, RegisterType::H}, // 0x2A
+                            Info{1, 8, &CPU::ld, &CPU::addr_R_HLI, RegisterType::A, RegisterType::HL}, // 0x2A
                             Info{}, // 0x2B
                             Info{}, // 0x2C
                             Info{}, // 0x2D
@@ -75,7 +75,7 @@ namespace gameboy
                             Info{}, // 0x33
                             Info{}, // 0x34
                             Info{1, 12, &CPU::dec, &CPU::addr_R, RegisterType::HL}, // 0x35
-                            Info{2, 12, &CPU::ld, &CPU::addr_MR_D8, RegisterType::HL, RegisterType::A}, // 0x36
+                            Info{2, 12, &CPU::ld, &CPU::addr_MR_D8, RegisterType::HL}, // 0x36
                             Info{}, // 0x37
                             Info{}, // 0x38
                             Info{}, // 0x39
@@ -141,14 +141,14 @@ namespace gameboy
                             Info{1, 4, &CPU::ld, &CPU::addr_R_R, RegisterType::L, RegisterType::A}, // 0x6F
 
                             // 0x7
-                            Info{1, 8, &CPU::ld, &CPU::addr_R_MR, RegisterType::HL, RegisterType::B}, // 0x70
-                            Info{1, 8, &CPU::ld, &CPU::addr_R_MR, RegisterType::HL, RegisterType::C}, // 0x71
-                            Info{1, 8, &CPU::ld, &CPU::addr_R_MR, RegisterType::HL, RegisterType::D}, // 0x72
-                            Info{1, 8, &CPU::ld, &CPU::addr_R_MR, RegisterType::HL, RegisterType::E}, // 0x73
-                            Info{1, 8, &CPU::ld, &CPU::addr_R_MR, RegisterType::HL, RegisterType::H}, // 0x74
-                            Info{1, 8, &CPU::ld, &CPU::addr_R_MR, RegisterType::HL, RegisterType::L}, // 0x75
+                            Info{1, 8, &CPU::ld, &CPU::addr_MR_R, RegisterType::HL, RegisterType::B}, // 0x70
+                            Info{1, 8, &CPU::ld, &CPU::addr_MR_R, RegisterType::HL, RegisterType::C}, // 0x71
+                            Info{1, 8, &CPU::ld, &CPU::addr_MR_R, RegisterType::HL, RegisterType::D}, // 0x72
+                            Info{1, 8, &CPU::ld, &CPU::addr_MR_R, RegisterType::HL, RegisterType::E}, // 0x73
+                            Info{1, 8, &CPU::ld, &CPU::addr_MR_R, RegisterType::HL, RegisterType::H}, // 0x74
+                            Info{1, 8, &CPU::ld, &CPU::addr_MR_R, RegisterType::HL, RegisterType::L}, // 0x75
                             Info{1, 4, &CPU::halt, &CPU::addr_IMP}, // 0x76
-                            Info{1, 8, &CPU::ld, &CPU::addr_R_MR, RegisterType::HL, RegisterType::A}, // 0x77
+                            Info{1, 8, &CPU::ld, &CPU::addr_MR_R, RegisterType::HL, RegisterType::A}, // 0x77
                             Info{1, 4, &CPU::ld, &CPU::addr_R_R, RegisterType::A, RegisterType::B}, // 0x78
                             Info{1, 4, &CPU::ld, &CPU::addr_R_R, RegisterType::A, RegisterType::C}, // 0x79
                             Info{1, 4, &CPU::ld, &CPU::addr_R_R, RegisterType::A, RegisterType::D}, // 0x7A
@@ -269,7 +269,7 @@ namespace gameboy
                             // 0xE
                             Info{}, // 0xE0
                             Info{}, // 0xE1
-                            Info{1, 8, &CPU::ld, &CPU::addr_R_MR, RegisterType::A, RegisterType::C}, // 0xE2
+                            Info{1, 8, &CPU::ld, &CPU::addr_MR_R, RegisterType::C, RegisterType::A}, // 0xE2
                             Info{}, // 0xE3
                             Info{}, // 0xE4
                             Info{}, // 0xE5
@@ -277,7 +277,7 @@ namespace gameboy
                             Info{}, // 0xE7
                             Info{}, // 0xE8
                             Info{}, // 0xE9
-                            Info{3, 16, &CPU::ld, &CPU::addr_MR_R,  RegisterType::NONE, RegisterType::A}, // 0xEA
+                            Info{3, 16, &CPU::ld, &CPU::addr_A16_R,  RegisterType::NONE, RegisterType::A}, // 0xEA
                             Info{}, // 0xEB
                             Info{}, // 0xEC
                             Info{}, // 0xED
