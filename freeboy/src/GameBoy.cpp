@@ -11,9 +11,7 @@
 
 namespace gameboy
 {
-    GameBoy::GameBoy() :
-    emulatorState(EmulatorState::RUNNING)
-    {}
+    GameBoy::GameBoy() : emulatorState(EmulatorState::RUNNING) {}
 
     bool GameBoy::init()
     {
@@ -25,15 +23,13 @@ namespace gameboy
         }
 
         cartridge = new Cartridge();
-        if (!cartridge->loadCartridge("C:/Users/ozgur/GitHub/FreeBoy/ROMs/cpu_instrs.gb"))
+        if (!cartridge->load("C:/Users/ozgur/GitHub/FreeBoy/ROMs/cpu_instrs.gb"))
         {
             printf("Cartridge could not be created! Error code %s\n", SDL_GetError());
             return false;
         }
 
-        bus = new Bus(cartridge);
-
-        cpu = new CPU(bus, this);
+        cpu = new CPU(this);
         if (!cpu->init())
         {
             printf("ERROR : CPU could not be initialized!");
@@ -78,7 +74,6 @@ namespace gameboy
     GameBoy::~GameBoy()
     {
         delete cpu;
-        delete bus;
         delete cartridge;
         delete graphic;
     }
@@ -88,4 +83,5 @@ namespace gameboy
         // TODO : increment cycle
     }
 
+    Cartridge *GameBoy::getCartridge() const { return cartridge; }
 }

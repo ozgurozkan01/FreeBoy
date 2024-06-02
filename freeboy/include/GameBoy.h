@@ -12,7 +12,6 @@ namespace gameboy
 {
     class Graphic;
     class Cartridge;
-    class Bus;
     class CPU;
 
     enum class EmulatorState : uint8_t
@@ -29,13 +28,14 @@ namespace gameboy
         ~GameBoy();
         bool init();
         void run();
+
+        Cartridge* getCartridge() const;
     private:
         EmulatorState emulatorState;
 
         Graphic* graphic;
         Cartridge* cartridge;
         CPU* cpu;
-        Bus* bus;
 
         uint64_t ticks;
         void processEvent();
