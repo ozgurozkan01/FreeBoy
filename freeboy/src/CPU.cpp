@@ -71,7 +71,7 @@ namespace gameboy
 
     void CPU::fetch()
     {
-        currentOpcode = busRef->read8(coreRegisters.PC++);
+        currentOpcode = bus->read8(coreRegisters.PC++);
         currentInstruction = &cpuProcess->standardInstructions[currentOpcode];
     }
 
@@ -87,7 +87,7 @@ namespace gameboy
             uint16_t pc = coreRegisters.PC - 1;
             printf("%04X: (%02X %02X %02X) A: %02X B: %02X C: %02X\n",
                    pc, currentOpcode,
-                   busRef->read8(pc + 1), busRef->read8(pc + 2),
+                   bus->read8(pc + 1), bus->read8(pc + 2),
                    coreRegisters.A, coreRegisters.B, coreRegisters.C);
 
             (this->*currentInstruction->addrMode)();
@@ -213,19 +213,28 @@ namespace gameboy
     }
 
     void CPU::addr_IMP() {}
-    void CPU::addr_R() { fetchedData = readRegister(currentInstruction->dstRegister); }
-    void CPU::addr_R_D8() { fetchedData = busRef->read8(coreRegisters.PC++); }
+
+    void CPU::addr_R()
+    {
+        fetchedData = readRegister(currentInstruction->dstRegister);
+    }
+
+    void CPU::addr_R_D8()
+    {
+        fetchedData = bus->read8(coreRegisters.PC++);
+    }
+
     void CPU::addr_D16()
     {
-        uint16_t lo = busRef->read8(coreRegisters.PC);
-        uint16_t hi = busRef->read8(coreRegisters.PC + 1);
+        uint16_t lo = bus->read8(coreRegisters.PC);
+        uint16_t hi = bus->read8(coreRegisters.PC + 1);
         fetchedData = lo | (hi << 8);
         coreRegisters.PC += 2;
     }
     void CPU::addr_R_D16()
     {
-        uint16_t lo = busRef->read8(coreRegisters.PC);
-        uint16_t hi = busRef->read8(coreRegisters.PC + 1);
+        uint16_t lo = bus->read8(coreRegisters.PC);
+        uint16_t hi = bus->read8(coreRegisters.PC + 1);
         fetchedData = lo | (hi << 8);
         coreRegisters.PC += 2;
     }
@@ -244,16 +253,16 @@ namespace gameboy
 
         if (currentInstruction->srcRegister == RegisterType::C) { srcAddress |= 0xFF00; }
 
-        fetchedData = busRef->read8(srcAddress);
+        fetchedData = bus->read8(srcAddress);
     }
     void CPU::addr_R_HLI()
     {
-        fetchedData = busRef->read8(readRegister(currentInstruction->srcRegister));
+        fetchedData = bus->read8(readRegister(currentInstruction->srcRegister));
         writeRegister(RegisterType::HL, readRegister(RegisterType::HL) + 1);
     }
     void CPU::addr_R_HLD()
     {
-        fetchedData = busRef->read8(readRegister(currentInstruction->srcRegister));
+        fetchedData = bus->read8(readRegister(currentInstruction->srcRegister));
         writeRegister(RegisterType::HL, readRegister(RegisterType::HL) - 1);
     }
     void CPU::addr_HLI_R()
@@ -271,18 +280,18 @@ namespace gameboy
         isDestMem = true;
         writeRegister(RegisterType::HL, readRegister(RegisterType::HL) - 1);
     }
-    void CPU::addr_R_A8() { fetchedData = busRef->read8(coreRegisters.PC++); }
+    void CPU::addr_R_A8() { fetchedData = bus->read8(coreRegisters.PC++); }
     void CPU::addr_A8_R()
     {
         isDestMem = true;
-        memoryDestination = busRef->read8(coreRegisters.PC++ | 0xFF00);
+        memoryDestination = bus->read8(coreRegisters.PC++ | 0xFF00);
     }
-    void CPU::addr_HL_SPR() { fetchedData = busRef->read8(coreRegisters.PC++); }
-    void CPU::addr_D8() { fetchedData = busRef->read8(coreRegisters.PC++); }
+    void CPU::addr_HL_SPR() { fetchedData = bus->read8(coreRegisters.PC++); }
+    void CPU::addr_D8() { fetchedData = bus->read8(coreRegisters.PC++); }
     void CPU::addr_D16_R()
     {
-        uint16_t lo = busRef->read8(coreRegisters.PC);
-        uint16_t hi = busRef->read8(coreRegisters.PC + 1);
+        uint16_t lo = bus->read8(coreRegisters.PC);
+        uint16_t hi = bus->read8(coreRegisters.PC + 1);
         memoryDestination = lo | (hi << 8);
         isDestMem = true;
         coreRegisters.PC += 2;
@@ -290,7 +299,7 @@ namespace gameboy
     }
     void CPU::addr_MR_D8()
     {
-        fetchedData = busRef->read8(coreRegisters.PC++);
+        fetchedData = bus->read8(coreRegisters.PC++);
         memoryDestination = readRegister(currentInstruction->dstRegister);
         isDestMem = true;
     }
@@ -298,12 +307,12 @@ namespace gameboy
     {
         memoryDestination = readRegister(currentInstruction->dstRegister);
         isDestMem = true;
-        fetchedData = busRef->read8(memoryDestination);;
+        fetchedData = bus->read8(memoryDestination);;
     }
     void CPU::addr_A16_R()
     {
-        uint16_t lo = busRef->read8(coreRegisters.PC);
-        uint16_t hi = busRef->read8(coreRegisters.PC + 1);
+        uint16_t lo = bus->read8(coreRegisters.PC);
+        uint16_t hi = bus->read8(coreRegisters.PC + 1);
         memoryDestination = lo | (hi << 8);
         isDestMem = true;
         coreRegisters.PC += 2;
@@ -311,11 +320,11 @@ namespace gameboy
     }
     void CPU::addr_R_A16()
     {
-        uint16_t lo = busRef->read8(coreRegisters.PC);
-        uint16_t hi = busRef->read8(coreRegisters.PC + 1);
+        uint16_t lo = bus->read8(coreRegisters.PC);
+        uint16_t hi = bus->read8(coreRegisters.PC + 1);
         uint16_t dstAddr = lo | (hi << 8);
         coreRegisters.PC += 2;
-        fetchedData = busRef->read8(dstAddr);
+        fetchedData = bus->read8(dstAddr);
     }
 
     void CPU::nop() {}
@@ -325,9 +334,9 @@ namespace gameboy
         if (isDestMem) // if the data is stored in the memory
         {
             // if stored value is 16-bit
-            if (currentInstruction->srcRegister >= RegisterType::AF) { busRef->write16(memoryDestination, fetchedData); }
+            if (currentInstruction->srcRegister >= RegisterType::AF) { bus->write16(memoryDestination, fetchedData); }
             // if stored value is 8-bit
-            else { busRef->write8(memoryDestination, fetchedData); }
+            else { bus->write8(memoryDestination, fetchedData); }
         }
 
         // SPR -> SP + e8 (opcode 0xF8)
@@ -343,27 +352,112 @@ namespace gameboy
         else { writeRegister(currentInstruction->dstRegister, fetchedData); }
     }
 
-    void CPU::jp() { if (isConditionPassed()) { coreRegisters.PC = fetchedData; } }
+    void CPU::jp()
+    {
+        if (isConditionPassed())
+        {
+            if (currentInstruction->dstRegister == RegisterType::HL)
+            {
+                coreRegisters.PC = readRegister(RegisterType::HL);
+            }
+            else
+            {
+                coreRegisters.PC = fetchedData;
+            }
+        }
+    }
+
     void CPU::di() { interruptHandler->setIME(false); }
     void CPU::halt() {}
-    void CPU::call() {}
+    void CPU::call()
+    {
+        if (isConditionPassed())
+        {
+            emulateCycles(1);       // internal branch decision ???
+            bus->write8(--coreRegisters.SP, coreRegisters.PC >> 8);
+            bus->write8(--coreRegisters.SP, coreRegisters.PC & 0xFF);
+            coreRegisters.PC = fetchedData;
+        }
+    }
     void CPU::cb() {}
     void CPU::ccf() {}
     void CPU::cpl() {}
     void CPU::daa() {}
     void CPU::ei() {}
     void CPU::inc() {}
-    void CPU::jr() {}
-    void CPU::ldh() {}
-    void CPU::pop() {}
-    void CPU::push() {}
-    void CPU::ret() {}
-    void CPU::reti() {}
+    void CPU::jr()
+    {
+        if (isConditionPassed())
+        {
+            coreRegisters.PC += static_cast<int8_t>(fetchedData & 0xFF);
+        }
+    }
+    void CPU::ldh()
+    {
+        if (isDestMem) // LDH [a8], A
+        {
+            const uint16_t memAddress = 0xFF00 + fetchedData;
+            const uint16_t registerData = readRegister(RegisterType::A);
+            bus->write8(memAddress, registerData);
+        }
+        else // LDH A, [a8]
+        {
+            const uint16_t memAddress = 0xFF00 + fetchedData;
+            writeRegister(RegisterType::A, memAddress);
+        }
+    }
+    void CPU::pop()
+    {
+        uint16_t low = bus->read8(coreRegisters.SP++);
+        uint16_t high = bus->read8(coreRegisters.SP++);
+
+        uint16_t data = high << 8 | low;
+
+        if (currentInstruction->dstRegister == RegisterType::AF)
+        {
+            data &= 0xFFF0;
+        }
+
+        writeRegister(currentInstruction->dstRegister, data);
+    }
+
+    void CPU::push()
+    {
+        uint16_t low = (readRegister(currentInstruction->dstRegister)) >> 8;
+        bus->write8(--coreRegisters.SP, low);
+        uint16_t high = (readRegister(currentInstruction->srcRegister)) & 0xFF;
+        bus->write8(--coreRegisters.SP, high);
+    }
+
+    void CPU::ret()
+    {
+        if (isConditionPassed())
+        {
+            uint16_t low = bus->read8(coreRegisters.SP++);
+            uint16_t high = bus->read8(coreRegisters.SP++);
+
+            uint16_t data = high << 8 | low;
+            coreRegisters.PC = data;
+        }
+    }
+
+    void CPU::reti()
+    {
+        ret();
+        interruptHandler->setIME(true);
+    }
     void CPU::rlca() {}
     void CPU::rla() {}
     void CPU::rra() {}
     void CPU::rrca() {}
-    void CPU::rst() {}
+
+    void CPU::rst()
+    {
+        bus->write8(--coreRegisters.SP, coreRegisters.PC >> 8);
+        bus->write8(--coreRegisters.SP, coreRegisters.PC & 0xFF);
+        coreRegisters.PC = currentInstruction->param;
+    }
+
     void CPU::scf() {}
     void CPU::stop() {}
 
