@@ -41,7 +41,7 @@ namespace gameboy
                             Info{1, 4, &CPU::dec, &CPU::addr_R, RegisterType::D}, // 0x15
                             Info{2, 8, &CPU::ld, &CPU::addr_R_D8, RegisterType::D}, // 0x16
                             Info{}, // 0x17
-                            Info{}, // 0x18
+                            Info{2, 12, &CPU::jr, &CPU::addr_D8}, // 0x18
                             Info{}, // 0x19
                             Info{1, 8, &CPU::ld, &CPU::addr_R_MR, RegisterType::A, RegisterType::DE}, // 0x1A
                             Info{}, // 0x1B
@@ -51,7 +51,7 @@ namespace gameboy
                             Info{}, // 0x1F
 
                             // 0x2
-                            Info{}, // 0x20
+                            Info{2, 12, &CPU::jr, &CPU::addr_D8, RegisterType::NONE, RegisterType::NONE, ConditionCode::NZ}, // 0x20
                             Info{3, 12, &CPU::ld, &CPU::addr_R_D16, RegisterType::HL}, // 0x21
                             Info{1, 8, &CPU::ld, &CPU::addr_HLI_R, RegisterType::HL, RegisterType::A}, // 0x22
                             Info{}, // 0x23
@@ -59,7 +59,7 @@ namespace gameboy
                             Info{1, 4, &CPU::dec, &CPU::addr_R, RegisterType::H}, // 0x25
                             Info{2, 8, &CPU::ld, &CPU::addr_R_D8, RegisterType::H}, // 0x26
                             Info{}, // 0x27
-                            Info{}, // 0x28
+                            Info{2, 12, &CPU::jr, &CPU::addr_D8, RegisterType::NONE, RegisterType::NONE, ConditionCode::Z}, // 0x28
                             Info{}, // 0x29
                             Info{1, 8, &CPU::ld, &CPU::addr_R_HLI, RegisterType::A, RegisterType::HL}, // 0x2A
                             Info{}, // 0x2B
@@ -69,7 +69,7 @@ namespace gameboy
                             Info{}, // 0x2F
 
                             // 0x3
-                            Info{}, // 0x30
+                            Info{2, 12, &CPU::jr, &CPU::addr_D8, RegisterType::NONE, RegisterType::NONE, ConditionCode::NC}, // 0x30
                             Info{3, 12, &CPU::ld, &CPU::addr_R_D16, RegisterType::SP}, // 0x31
                             Info{1, 8, &CPU::ld, &CPU::addr_HLD_R, RegisterType::HL, RegisterType::A}, // 0x32
                             Info{}, // 0x33
@@ -77,7 +77,7 @@ namespace gameboy
                             Info{1, 12, &CPU::dec, &CPU::addr_R, RegisterType::HL}, // 0x35
                             Info{2, 12, &CPU::ld, &CPU::addr_MR_D8, RegisterType::HL}, // 0x36
                             Info{}, // 0x37
-                            Info{}, // 0x38
+                            Info{2, 12, &CPU::jr, &CPU::addr_D8, RegisterType::NONE, RegisterType::NONE, ConditionCode::C}, // 0x38
                             Info{}, // 0x39
                             Info{1, 8, &CPU::ld, &CPU::addr_R_HLD, RegisterType::A, RegisterType::HL}, // 0x3A
                             Info{}, // 0x3B
@@ -231,68 +231,68 @@ namespace gameboy
                             Info{},
 
                             // 0xC
-                            Info{},
-                            Info{},
-                            Info{},
+                            Info{1, 20, &CPU::ret, &CPU::addr_IMP, RegisterType::NONE, RegisterType::NONE, ConditionCode::NZ},
+                            Info{1, 12, &CPU::pop, &CPU::addr_IMP, RegisterType::BC},
+                            Info{3, 16, &CPU::jp, &CPU::addr_D16, RegisterType::NONE, RegisterType::NONE, ConditionCode::NZ},
                             Info{3, 16, &CPU::jp, &CPU::addr_D16}, // 0xC3
+                            Info{3, 24, &CPU::call, &CPU::addr_D16, RegisterType::NONE, RegisterType::NONE, ConditionCode::NZ},
+                            Info{1, 16, &CPU::push, &CPU::addr_IMP, RegisterType::BC},
                             Info{},
+                            Info{1, 16, &CPU::rst, &CPU::addr_IMP, RegisterType::NONE, RegisterType::NONE, ConditionCode::NONE, 0x00},
+                            Info{1, 20, &CPU::ret, &CPU::addr_IMP, RegisterType::NONE, RegisterType::NONE, ConditionCode::Z},
+                            Info{1, 16, &CPU::ret, &CPU::addr_IMP},
+                            Info{3, 16, &CPU::jp, &CPU::addr_D16, RegisterType::NONE, RegisterType::NONE, ConditionCode::Z},
                             Info{},
+                            Info{3, 24, &CPU::call, &CPU::addr_D16, RegisterType::NONE, RegisterType::NONE, ConditionCode::Z},
+                            Info{3, 24, &CPU::call, &CPU::addr_D16},
                             Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
+                            Info{1, 16, &CPU::rst, &CPU::addr_IMP, RegisterType::NONE, RegisterType::NONE, ConditionCode::NONE, 0x08},
 
                             // 0xD
+                            Info{1, 20, &CPU::ret, &CPU::addr_IMP, RegisterType::NONE, RegisterType::NONE, ConditionCode::NC},
+                            Info{1, 12, &CPU::pop, &CPU::addr_IMP, RegisterType::DE},
+                            Info{3, 16, &CPU::jp, &CPU::addr_D16, RegisterType::NONE, RegisterType::NONE, ConditionCode::NC},
+                            Info{},
+                            Info{3, 24, &CPU::call, &CPU::addr_D16, RegisterType::NONE, RegisterType::NONE, ConditionCode::NC},
+                            Info{1, 16, &CPU::push, &CPU::addr_IMP, RegisterType::DE},
+                            Info{},
+                            Info{1, 16, &CPU::rst, &CPU::addr_IMP, RegisterType::NONE, RegisterType::NONE, ConditionCode::NONE, 0x10},
+                            Info{1, 20, &CPU::ret, &CPU::addr_IMP, RegisterType::NONE, RegisterType::NONE, ConditionCode::C},
+                            Info{1, 16, &CPU::reti, &CPU::addr_IMP},
+                            Info{3, 16, &CPU::jp, &CPU::addr_D16, RegisterType::NONE, RegisterType::NONE, ConditionCode::C},
+                            Info{},
+                            Info{3, 24, &CPU::call, &CPU::addr_D16, RegisterType::NONE, RegisterType::NONE, ConditionCode::C},
                             Info{},
                             Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
-                            Info{},
+                            Info{1, 16, &CPU::rst, &CPU::addr_IMP, RegisterType::NONE, RegisterType::NONE, ConditionCode::NONE, 0x18},
 
                             // 0xE
-                            Info{}, // 0xE0
-                            Info{}, // 0xE1
+                            Info{2, 12, &CPU::ldh, &CPU::addr_A8_R, RegisterType::NONE, RegisterType::A}, // 0xE0
+                            Info{1, 12, &CPU::pop, &CPU::addr_IMP, RegisterType::HL}, // 0xE1
                             Info{1, 8, &CPU::ld, &CPU::addr_MR_R, RegisterType::C, RegisterType::A}, // 0xE2
                             Info{}, // 0xE3
                             Info{}, // 0xE4
-                            Info{}, // 0xE5
+                            Info{1, 16, &CPU::push, &CPU::addr_IMP, RegisterType::HL}, // 0xE5
                             Info{}, // 0xE6
-                            Info{}, // 0xE7
+                            Info{1, 16, &CPU::rst, &CPU::addr_IMP, RegisterType::NONE, RegisterType::NONE, ConditionCode::NONE, 0x20}, // 0xE7
                             Info{}, // 0xE8
-                            Info{}, // 0xE9
+                            Info{1, 4, &CPU::jp, &CPU::addr_MR, RegisterType::HL}, // 0xE9
                             Info{3, 16, &CPU::ld, &CPU::addr_A16_R,  RegisterType::NONE, RegisterType::A}, // 0xEA
                             Info{}, // 0xEB
                             Info{}, // 0xEC
                             Info{}, // 0xED
                             Info{}, // 0xEE
-                            Info{}, // 0xEF
+                            Info{1, 16, &CPU::rst, &CPU::addr_IMP, RegisterType::NONE, RegisterType::NONE, ConditionCode::NONE, 0x28}, // 0xEF
 
                             // 0xF
-                            Info{}, // 0xF0
-                            Info{}, // 0xF1
+                            Info{2, 12, &CPU::ldh, &CPU::addr_R_A8, RegisterType::A}, // 0xF0
+                            Info{1, 12, &CPU::pop, &CPU::addr_IMP, RegisterType::AF}, // 0xF1
                             Info{1, 8, &CPU::ld, &CPU::addr_R_MR, RegisterType::A, RegisterType::C}, // 0xF2
                             Info{1, 4, &CPU::di, &CPU::addr_IMP}, // 0xF3
                             Info{}, // 0xF4
-                            Info{}, // 0xF5
+                            Info{1, 16, &CPU::push, &CPU::addr_IMP, RegisterType::AF}, // 0xF5
                             Info{}, // 0xF6
-                            Info{}, // 0xF7
+                            Info{1, 16, &CPU::rst, &CPU::addr_IMP, RegisterType::NONE, RegisterType::NONE, ConditionCode::NONE, 0x30}, // 0xF7
                             Info{}, // 0xF8
                             Info{}, // 0xF9
                             Info{1, 8, &CPU::ld, &CPU::addr_R_A16, RegisterType::A}, // 0xFA
@@ -300,7 +300,7 @@ namespace gameboy
                             Info{}, // 0xFC
                             Info{}, // 0xFD
                             Info{}, // 0xFE
-                            Info{}, // 0xFF
+                            Info{1, 16, &CPU::rst, &CPU::addr_IMP, RegisterType::NONE, RegisterType::NONE, ConditionCode::NONE, 0x38}, // 0xFF
                     };
 
             cbInstructions = {};
