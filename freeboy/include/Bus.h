@@ -10,10 +10,19 @@
 namespace gameboy
 {
     class Cartridge;
+    namespace ram
+    {
+        class WRAM;
+    }
+
+    namespace instruction
+    {
+        class InterruptHandler;
+    }
 
     class Bus {
     public:
-        Bus(Cartridge* _cartridge);
+        Bus(Cartridge* _cartridge, instruction::InterruptHandler* _interruptHandler);
         ~Bus();
 
         void write8(uint16_t  address, uint8_t value);
@@ -23,6 +32,8 @@ namespace gameboy
 
     private:
         Cartridge* cartridgeRef;
+        instruction::InterruptHandler* interruptHandlerRef;
+        ram::WRAM* wram;
     };
 }
 
