@@ -35,7 +35,7 @@
 
 namespace gameboy
 {
-    Bus::Bus(Cartridge* _cartridge, instruction::InterruptHandler* _interruptHandler) :
+    Bus::Bus(Cartridge* _cartridge, InterruptHandler* _interruptHandler) :
     cartridgeRef(_cartridge),
     interruptHandlerRef(_interruptHandler),
     wram(new ram::WRAM)
@@ -89,6 +89,7 @@ namespace gameboy
         }
 
         printf("UNSUPPORTED bus_write(%04X)\n", address);
+        exit(-1);
     }
 
     void Bus::write16(uint16_t address, uint16_t value)
@@ -141,7 +142,7 @@ namespace gameboy
         }
 
         printf("UNSUPPORTED bus_read(%04X)\n", address);
-        return -1;
+        exit(-1);
     }
 
     uint16_t Bus::read16(uint16_t address)
