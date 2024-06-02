@@ -10,34 +10,33 @@
 
 namespace gameboy
 {
-    CPU::CPU(Bus* _bus, GameBoy* _gb) : busRef(_bus), gameBoyRef(_gb) {}
+    CPU::CPU(GameBoy* _gb) : gameBoyRef(_gb) {}
 
     bool CPU::init()
     {
-        interruptHandler = new InterruptHandler();
-        cpuProcess = new Instructions(this);
+        if (gameBoyRef == nullptr)
+        {
+            printf("GameBoyRef could not be initialized!\n");
+            return false;
+        }
 
+        interruptHandler = new InterruptHandler();
         if (interruptHandler == nullptr)
         {
             printf("Interrupt handler could not be initialized!\n");
             return false;
         }
-        
+        cpuProcess = new Instructions(this);
         if (!cpuProcess->init())
         {
             printf("CPU Proc could not be initialized!\n");
             return false;
         }
 
-        if (busRef == nullptr)
+        bus = new Bus(gameBoyRef->getCartridge(), interruptHandler);
+        if (bus == nullptr)
         {
             printf("BusRef could not be initialized!\n");
-            return false;
-        }
-
-        if (gameBoyRef == nullptr)
-        {
-            printf("GameBoyRef could not be initialized!\n");
             return false;
         }
 

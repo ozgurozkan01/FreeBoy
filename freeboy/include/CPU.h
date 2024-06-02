@@ -52,7 +52,7 @@ namespace gameboy
         friend instruction::Instructions;
     public:
 
-        CPU(Bus* _bus, GameBoy* _gb);
+        CPU(GameBoy* _gb);
 
         void step();
         void emulateCycles(uint8_t cycleCount);
@@ -73,7 +73,7 @@ namespace gameboy
         Instructions::Info* currentInstruction;
         CoreRegisters coreRegisters;
 
-        Bus* busRef;
+        Bus* bus;
         GameBoy* gameBoyRef;
         Instructions* cpuProcess;
         InterruptHandler* interruptHandler;
@@ -127,7 +127,6 @@ namespace gameboy
         void addr_MR();     //
         void addr_A16_R();  // Operation which is getting the data from register and store 16 bit address in memory
         void addr_R_A16();  // Operation which is getting the data from 16 address in memory and store in the register
-
 
         uint16_t readRegister(RegisterType _register) const; // Read value of core register
         void writeRegister(RegisterType _register, uint16_t _value); // Read value into core register
