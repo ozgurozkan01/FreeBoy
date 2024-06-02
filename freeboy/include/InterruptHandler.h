@@ -26,9 +26,17 @@ namespace gameboy
             ~InterruptHandler() = default;
 
             void setIME(bool _isEnable);
+            void setIE(uint8_t _value);
+            void setIF(uint8_t _value);
+
+            bool getIME();
+            uint8_t getIE();
+            uint8_t getIF();
 
         private:
-            bool interruptMasterEnable;
+            bool interruptMasterEnable; // IME
+            uint8_t interruptEnableRegister; // IE
+            uint8_t interruptFlagRegister; // IF
         };
     }
 }
