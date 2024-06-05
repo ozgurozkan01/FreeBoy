@@ -86,6 +86,8 @@ namespace gameboy
         void decode();
 
         bool isConditionPassed();
+        bool is16Bit(RegisterType _register) const;
+
         /* ALU Functions */
         void alu_adc(); void alu_add(); void alu_and(); void alu_cp();
         void alu_sub(); void alu_sbc(); void alu_or();  void alu_xor();
@@ -107,26 +109,26 @@ namespace gameboy
         void cb_swap();
 
         void addr_IMP();    // No Implementation
-        void addr_R();      // Operation on just one Register (does not matter 8 or 16 bit)
-        void addr_R_D8();   // Operation which is getting the 8 bit data and store in the register
-        void addr_D16();    // Operation which is storing 16 bit value into PC
-        void addr_R_D16();  // Operation which is getting the 16 bit data and store in the register
-        void addr_R_R();    // Operation which is getting the data from register and store in the another register
-        void addr_MR_R();   //
-        void addr_R_MR();   //
-        void addr_R_HLI();  // Operation which is getting the HL value and store in the register. Then increase HL
-        void addr_R_HLD();  // Operation which is getting the HL value and store in the register. Then decrease HL
-        void addr_HLI_R();  // Operation which is getting the data from register and store in the HL. then increase HL
-        void addr_HLD_R();  // Operation which is getting the data from register and store in the HL. then decrease HL
-        void addr_R_A8();   // Operation which is getting the data from 8 Bit address in memory and store on the register
-        void addr_A8_R();   // Operation which is getting the data from register and store in the 8 bit address in memory
-        void addr_HL_SPR(); //
-        void addr_D8();     // Operation which is storing 8 bit value into PC
-        void addr_D16_R();  // Operation which is getting the data from register and use as 16 bit data
-        void addr_MR_D8();  //
-        void addr_MR();     //
-        void addr_A16_R();  // Operation which is getting the data from register and store 16 bit address in memory
-        void addr_R_A16();  // Operation which is getting the data from 16 address in memory and store in the register
+        void addr_R();      // Address Mode on just one Register (does not matter 8 or 16 bit) -> INC C, INC BC
+        void addr_R_D8();   // Address Mode which is getting the 8 bit data and store in the register -> LD H, n8
+        void addr_R_D16();  // Address Mode which is getting the 16 bit data and store in the register ->
+        void addr_R_R();    // Address Mode which is getting the data from register and store in the another register ->
+        void addr_R_MR();   // Address Mode which is getting the data from memory address via register and store in the register ->
+        void addr_R_HLI();  // Address Mode which is getting the HL value and store in the register. Then increase HL ->
+        void addr_R_HLD();  // Address Mode which is getting the HL value and store in the register. Then decrease HL ->
+        void addr_R_A8();   // Address Mode which is getting the data from 8 Bit address in memory and store on the register ->
+        void addr_R_A16();  // Address Mode which is getting the data from 16 address in memory and store in the register ->
+        void addr_D8();     // Address Mode which is storing 8 bit value into PC ->
+        void addr_D16();    // Address Mode which is storing 16 bit value into PC ->
+        void addr_D16_R();  // Address Mode which is getting the data from register and use as 16 bit data ->
+        void addr_MR_R();   // Address Mode which is getting the data from register and store in the memory address via register ->
+        void addr_MR_D8();  // Address Mode which is getting 8-bit data and store in the memory address via register -> LD [HL], A
+        void addr_MR();     // Address Mode on just memory address via register -> INC [HL], DEC [HL]
+        void addr_HL_SPR(); // Address Mode
+        void addr_HLI_R();  // Address Mode which is getting the data from register and store in the HL. then increase HL ->
+        void addr_HLD_R();  // Address Mode which is getting the data from register and store in the HL. then decrease HL ->
+        void addr_A8_R();   // Address Mode which is getting the data from register and store in the 8 bit address in memory ->
+        void addr_A16_R();  // Address Mode which is getting the data from register and store 16 bit address in memory ->
 
         uint16_t readRegister(RegisterType _register) const; // Read value of core register
         void writeRegister(RegisterType _register, uint16_t _value); // Read value into core register
