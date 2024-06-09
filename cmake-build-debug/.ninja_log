@@ -1,3 +1,21 @@
 # ninja log v5
-0	356	7344004429767134	CMakeFiles/FreeBoy.dir/main.cpp.obj	2ae4f024d2e403b4
-365	442	7344004430602351	FreeBoy.exe	dec45a5a92c8716e
+18	805	7396318257632459	CMakeFiles/FreeBoy.dir/main.cpp.obj	8eb1f189148ab180
+17	124	7377765840735749	CMakeFiles/FreeBoy.dir/freeboy/src/CoreRegisters.cpp.obj	bdd85fe736d31260
+7	827	7396317888851650	CMakeFiles/FreeBoy.dir/freeboy/src/Cartridge.cpp.obj	e7e5ee38af40be6c
+952	1083	7396311005606668	FreeBoy.exe	b495ac8eb69a29e8
+16	349	7396310998419312	CMakeFiles/FreeBoy.dir/freeboy/src/Bus.cpp.obj	924128a7e4b59ad2
+22	1075	7396318260346783	CMakeFiles/FreeBoy.dir/freeboy/src/GameBoy.cpp.obj	70776db52b6b15c
+98	2183	7372476760809017	CMakeFiles/FreeBoy.dir/freeboy/src/Graphic.cpp.obj	d2c0f3edf7f3fe74
+34	1068	7396318260256590	CMakeFiles/FreeBoy.dir/freeboy/src/CPU.cpp.obj	1b124ce47870cf1a
+13	551	7396319630107374	build.ninja	561cac82858edceb
+131	568	7372476744512211	CMakeFiles/FreeBoy.dir/freeboy/src/Joypad.cpp.obj	37be91d97e584dfc
+33	211	7396289515999253	CMakeFiles/FreeBoy.dir/freeboy/src/Instructions.cpp.obj	f54f574c20e6be48
+18	100	7388974457276672	CMakeFiles/FreeBoy.dir/freeboy/src/InterruptHandler.cpp.obj	a253557d534c5659
+34	240	7388120847774745	CMakeFiles/FreeBoy.dir/freeboy/src/RAM.cpp.obj	580cad0b857ebf94
+37	185	7396289515734519	CMakeFiles/FreeBoy.dir/freeboy/src/CPURegisters.cpp.obj	31713e6d57216643
+24	167	7396319652842498	CMakeFiles/FreeBoy.dir/freeboy/src/InstructionSet.cpp.obj	157a8e86a9cabc2e
+20	970	7396319660894865	CMakeFiles/FreeBoy.dir/freeboy/src/CPU.cpp.obj	1b124ce47870cf1a
+16	980	7396319660994857	CMakeFiles/FreeBoy.dir/freeboy/src/GameBoy.cpp.obj	70776db52b6b15c
+981	1115	7396319662308951	FreeBoy.exe	649e2e07d01d3ca8
+15	854	7396319836757727	CMakeFiles/FreeBoy.dir/freeboy/src/GameBoy.cpp.obj	70776db52b6b15c
+855	981	7396319837988954	FreeBoy.exe	649e2e07d01d3ca8

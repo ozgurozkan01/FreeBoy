@@ -9,7 +9,7 @@
 					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
 					"minimumCMakeVersion" : 
 					{
-						"string" : "3.27"
+						"string" : "3.13"
 					},
 					"projectIndex" : 0,
 					"source" : ".",
@@ -39,7 +39,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "FreeBoy::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-FreeBoy-Debug-b5c99d692a25a1f2ee6a.json",
+					"jsonFile" : "target-FreeBoy-Debug-6f8330a3546f9a685eac.json",
 					"name" : "FreeBoy",
 					"projectIndex" : 0
 				}

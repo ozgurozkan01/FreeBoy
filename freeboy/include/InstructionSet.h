@@ -31,13 +31,7 @@ namespace gameboy {
             struct Info
             {
                 uint8_t length = 0;
-                uint8_t tCycles = 0;
-                void (gameboy::CPU::*operation)() = nullptr;
-                void (gameboy::CPU::*addrMode)() = nullptr;
-                RegisterType dstRegister = RegisterType::NONE;
-                RegisterType srcRegister = RegisterType::NONE;
-                ConditionCode condition = ConditionCode::NONE;
-                uint8_t param{0u};
+                uint8_t mCycles = 0;
             };
 
             Instructions(CPU* _cpu);

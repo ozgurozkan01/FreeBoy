@@ -12,21 +12,11 @@ add_executable(FreeBoy main.cpp
         freeboy/include/Cartridge.h
         freeboy/src/GameBoy.cpp
         freeboy/include/GameBoy.h
-        freeboy/src/Graphic.cpp
-        freeboy/include/Graphic.h
-        freeboy/src/Bus.cpp
-        freeboy/include/Bus.h
         freeboy/include/util/Utility.h
         freeboy/src/CPU.cpp
         freeboy/include/CPU.h
-        freeboy/src/Instructions.cpp
-        freeboy/include/Instructions.h
-        freeboy/src/Joypad.cpp
-        freeboy/include/Joypad.h
-        freeboy/src/InterruptHandler.cpp
-        freeboy/include/InterruptHandler.h
-        freeboy/src/RAM.cpp
-        freeboy/include/RAM.h
+        freeboy/src/InstructionSet.cpp
+        freeboy/include/InstructionSet.h
 )
 
 target_link_libraries(FreeBoy ${SDL2_LIBRARY} -lmingw32 -lSDL2main -lSDL2 -mwindows)

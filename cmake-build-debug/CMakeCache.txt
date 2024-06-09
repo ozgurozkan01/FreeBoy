@@ -251,6 +251,9 @@ FreeBoy_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 FreeBoy_SOURCE_DIR:STATIC=C:/Users/ozgur/GitHub/FreeBoy
 
+//The directory containing a CMake configuration file for SDL2.
+SDL2_DIR:PATH=C:/Program Files/JetBrains/CLion 2023.1.5/bin/mingw/lib/cmake/SDL2
+
 
 ########################
 # INTERNAL cache entries
@@ -265,9 +268,9 @@ CMAKE_CACHEFILE_DIR:INTERNAL=c:/Users/ozgur/GitHub/FreeBoy/cmake-build-debug
 //Major version of cmake used to create the current loaded cache
 CMAKE_CACHE_MAJOR_VERSION:INTERNAL=3
 //Minor version of cmake used to create the current loaded cache
-CMAKE_CACHE_MINOR_VERSION:INTERNAL=27
+CMAKE_CACHE_MINOR_VERSION:INTERNAL=28
 //Patch version of cmake used to create the current loaded cache
-CMAKE_CACHE_PATCH_VERSION:INTERNAL=8
+CMAKE_CACHE_PATCH_VERSION:INTERNAL=1
 //Path to CMake executable.
 CMAKE_COMMAND:INTERNAL=C:/Program Files/JetBrains/CLion 2023.1.5/bin/cmake/win/x64/bin/cmake.exe
 //Path to cpack program executable.
@@ -379,7 +382,7 @@ CMAKE_RC_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_READELF
 CMAKE_READELF-ADVANCED:INTERNAL=1
 //Path to CMake installation.
-CMAKE_ROOT:INTERNAL=C:/Program Files/JetBrains/CLion 2023.1.5/bin/cmake/win/x64/share/cmake-3.27
+CMAKE_ROOT:INTERNAL=C:/Program Files/JetBrains/CLion 2023.1.5/bin/cmake/win/x64/share/cmake-3.28
 //ADVANCED property for variable: CMAKE_SHARED_LINKER_FLAGS
 CMAKE_SHARED_LINKER_FLAGS-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_SHARED_LINKER_FLAGS_DEBUG
