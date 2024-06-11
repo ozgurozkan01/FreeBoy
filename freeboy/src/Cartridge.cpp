@@ -5,6 +5,7 @@
 #include "../../freeboy/include/Cartridge.h"
 #include <fstream>
 #include <unordered_map>
+#include <iostream>
 
 constexpr uint16_t HEADER_START_POINT = 0x0100;
 
@@ -124,12 +125,12 @@ namespace gameboy
 
         cartridgeFile.seekg(0, std::ios::end);
 
-        romSize = static_cast<uint32_t>(cartridgeFile.tellg());
-        romData = new uint8_t[romSize];
+        cartridgeSize = static_cast<uint32_t>(cartridgeFile.tellg());
+        cartridgeData = new uint8_t[cartridgeSize];
 
         cartridgeFile.seekg(std::ios::beg);
 
-        if (!cartridgeFile.read(reinterpret_cast<char*>(romData), romSize))
+        if (!cartridgeFile.read(reinterpret_cast<char*>(cartridgeData), cartridgeSize))
         {
             printf("ROM file could not be read properly.\n");
             cartridgeFile.close();
@@ -137,36 +138,48 @@ namespace gameboy
         }
         cartridgeFile.close();
 
-        // LOAD ROM HEADER
-        romHeader = reinterpret_cast<RomHeader*>(romData + HEADER_START_POINT);
-        // PRINT HEADER INFORMATIONS
-        printf("Successfully loaded ROM from file path: %s:\n", cartridgeName.c_str());
-        printf("\tTitle    : %s\n", romHeader->title);
-        printf("\tType     : %2.2X (%s)\n", romHeader->cartridgeType, getCartridgeType().c_str());
-        printf("\tROM Size : %d KB\n", 32 << romHeader->romSize);
-        printf("\tRAM Size : %2.2X\n", romHeader->ramSize);
-        printf("\tLIC Code : %2.2X (%s)\n", romHeader->oldLicenseeCode, getCartridgeLicence().c_str());
-        printf("\tROM Vers : %2.2X\n", romHeader->romVersion);
-        printf("\tChecksum : %2.2X (%s)\n", romHeader->headerChecksum, isChecksumPassed() ? "PASSED" : "FAILED");
+        std::copy(cartridgeData + header.title, cartridgeData + header.cgbFlag, title);
+        bool cgb = cartridgeData[header.cgbFlag] == 0x80 || cartridgeData[header.cgbFlag] == 0xC0;
+        bool sgb = cartridgeData[header.sgbFlag] == 0x03;
+        uint8_t checksum = cartridgeData[header.headerChecksum];
+        uint8_t romAddress = cartridgeData[header.romSize];
+        uint8_t ramAddress = cartridgeData[header.ramSize];
+        uint8_t destinationCode = cartridgeData[header.destinationCode];
 
+        // CARTRIDGE INFO
+        std::cout << "------ Cartridge Info ------\n";
+        printf("Title       : %s\n", title);
+        printf("CGB Flag    : %d\n", cgb);
+        printf("SGB Flag    : %d\n", sgb);
+        printf("Type        : %s\n", getCartridgeType().c_str());
+        printf("ROM Size    : %s\n", getROMType(romAddress).c_str());
+        printf("RAM Size    : %s\n", getRAMType(ramAddress).c_str());
+        printf("Dest. Code  : %s\n", getDestinationCode(destinationCode).c_str());
+        printf("Licencee    : %s\n", getCartridgeLicence().c_str());
+        printf("Checksum    : %X (%s)\n", checksum, isChecksumPassed(checksum).c_str());
+        std::cout << "---------------------------\n";
+
+        exit(-1);
         return true;
     }
 
     std::string Cartridge::getCartridgeType()
     {
-        if (romHeader->cartridgeType <= 0x22)
+        const uint8_t typeAddress = cartridgeData[header.cartridgeType];
+        if (typeAddress <= 0x22)
         {
-            return ROM_TYPES[romHeader->cartridgeType];
+            return ROM_TYPES[typeAddress];
         }
-
         return "UNKNOWN";
     }
 
     std::string Cartridge::getCartridgeLicence()
     {
-        if (romHeader->newLicenseeCode <= 0xA4)
+        const uint8_t licenceeAddress = cartridgeData[header.oldLicensCode];
+
+        if (cartridgeData[licenceeAddress] <= 0xA4)
         {
-            auto licence = LICENCE_CODE.find( romHeader->oldLicenseeCode);
+            auto licence = LICENCE_CODE.find( licenceeAddress);
             if (licence != LICENCE_CODE.end())
             {
                 return licence->second;
@@ -175,18 +188,61 @@ namespace gameboy
         return "UNKNOWN";
     }
 
-    bool Cartridge::isChecksumPassed()
+    std::string Cartridge::getROMType(const uint8_t& _address) const
+    {
+        switch (_address)
+        {
+            case 0x00: return "32 KiB";
+            case 0x01: return "64 KiB";
+            case 0x02: return "128 KiB";
+            case 0x03: return "256 KiB";
+            case 0x04: return "512 KiB";
+            case 0x05: return "1 MiB";
+            case 0x06: return "2 MiB";
+            case 0x07: return "4 MiB";
+            case 0x08: return "8 MiB";
+            case 0x52: return "1.1 MiB";
+            case 0x53: return "1.2 MiB";
+            case 0x54: return "1.3 MiB";
+        }
+        return "Invalid ROM";
+    }
+
+    std::string Cartridge::getRAMType(const uint8_t& _address) const
+    {
+        switch (_address)
+        {
+            case 0x00: return "No RAM";
+            case 0x01: return "Unused";
+            case 0x02: return "8 KiB (1 bank)";
+            case 0x03: return "32 KiB (4 banks of 8KiB each)";
+            case 0x04: return "128 KiB (16 banks of 8KiB each)";
+            case 0x05: return "64 KiB (8 banks of 8KiB each)";
+        }
+        return "Invalid RAM";
+    }
+
+    std::string Cartridge::getDestinationCode(const uint8_t &_address) const
+    {
+        switch (_address)
+        {
+            case 0x00: return "Japan (and possibly overseas)";
+            case 0x01: return "Overseas only";
+        }
+        return "Invalid Destination Code";
+    }
+    std::string Cartridge::isChecksumPassed(const uint8_t& _checksum)
     {
         uint8_t checksum = 0;
         for (uint16_t address = 0x0134; address <= 0x014C; address++)
         {
-            checksum = checksum - romData[address] - 1;
+            checksum = checksum - cartridgeData[address] - 1;
         }
         /* The boot ROM verifies this checksum. If the byte at $014D(Header Checksum) does not match the lower 8 bits of checksum,
          * the boot ROM will lock up and the program in the cartridge won’t run.*/
-        return  romHeader->headerChecksum == (checksum & 0xFF);
+        return  _checksum == (checksum & 0xFF) ? "PASSED" : "FAILED";
     }
 
     void Cartridge::write(uint16_t address, uint8_t value) { }
-    uint8_t Cartridge:: read(uint16_t address) { return romData[address]; }
+    uint8_t Cartridge:: read(uint16_t address) { return cartridgeData[address]; }
 }

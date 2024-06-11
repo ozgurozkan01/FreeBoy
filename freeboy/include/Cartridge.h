@@ -13,20 +13,21 @@ namespace gameboy
 {
     struct RomHeader
     {
-        uint8_t entryPoint[4];
-        uint8_t nintendoLogo[0x30u];
-
-        char title[0x10u];
-        uint16_t newLicenseeCode;
-        uint8_t sgbFlag; // Super GameBoy support flag
-        uint8_t cartridgeType;
-        uint8_t romSize;
-        uint8_t ramSize;
-        uint8_t destinationCode;
-        uint8_t oldLicenseeCode;
-        uint8_t romVersion;
-        uint8_t headerChecksum;
-        uint16_t globalChecksum;
+        const int entry = 0x100;
+        const int nintendoLogo = 0x104;
+        const int title = 0x134;
+        const int manufacturerCode = 0x13F;
+        const int cgbFlag = 0x143;
+        const int newLicenseCode = 0x144;
+        const int sgbFlag = 0x146;
+        const int cartridgeType = 0x147;
+        const int romSize = 0x148;
+        const int ramSize = 0x149;
+        const int destinationCode = 0x14A;
+        const int oldLicensCode = 0x14B;
+        const int versionNumber = 0x14C;
+        const int headerChecksum = 0x14D;
+        const int globalChecksum = 0x14E;
     };
 
     class Cartridge {
@@ -39,13 +40,18 @@ namespace gameboy
         void write(uint16_t address, uint8_t value);
         [[maybe_unused]] uint8_t read(uint16_t address);
     private:
-        uint32_t romSize{};
-        uint8_t* romData{};
-        RomHeader* romHeader{};
+        char title[16];
 
+        uint32_t cartridgeSize{};
+        uint8_t* cartridgeData{};
+        RomHeader header{};
+
+        std::string getDestinationCode(const uint8_t& _address) const;
+        std::string getROMType(const uint8_t& _address) const;
+        std::string getRAMType(const uint8_t& _address) const;
         std::string getCartridgeType();
         std::string getCartridgeLicence();
-        bool isChecksumPassed();
+        std::string isChecksumPassed(const uint8_t& _checksum);
     };
 }
 
