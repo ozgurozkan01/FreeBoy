@@ -11,8 +11,10 @@
 
 namespace gameboy
 {
-    GameBoy::GameBoy(std::string _romPath) : emulatorState(EmulatorState::RUNNING), romPath(_romPath) {}
-
+    GameBoy::GameBoy(std::string _romPath) :
+    romPath(_romPath),
+    emulatorState(EmulatorState::RUNNING) {}
+    
     bool GameBoy::init()
     {
         interruptHandler = new InterruptHandler();

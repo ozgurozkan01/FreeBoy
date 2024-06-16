@@ -5,7 +5,6 @@
 #ifndef FREEBOY_GAMEBOY_H
 #define FREEBOY_GAMEBOY_H
 
-
 #include "SDL2/SDL.h"
 #include <cstdint>
 #include <string>
