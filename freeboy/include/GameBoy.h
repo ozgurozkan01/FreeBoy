@@ -6,13 +6,16 @@
 #define FREEBOY_GAMEBOY_H
 
 
+#include "SDL2/SDL.h"
 #include <cstdint>
+#include <string>
 
 namespace gameboy
 {
-    class Graphic;
+    class InterruptHandler;
     class Cartridge;
     class CPU;
+    class MMU;
 
     enum class EmulatorState : uint8_t
     {
@@ -24,18 +27,19 @@ namespace gameboy
     class GameBoy {
         friend class CPU;
     public:
-        GameBoy();
+        GameBoy(std::string _romPath);
         ~GameBoy();
         bool init();
         void run();
-
-        Cartridge* getCartridge() const;
     private:
+        std::string romPath;
+
         EmulatorState emulatorState;
 
-        Graphic* graphic;
+        InterruptHandler* interruptHandler;
         Cartridge* cartridge;
         CPU* cpu;
+        MMU* mmu;
 
         uint64_t ticks;
         void processEvent();

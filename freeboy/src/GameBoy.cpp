@@ -3,33 +3,35 @@
 //
 
 #include "../include/GameBoy.h"
-#include "../include/Graphic.h"
+#include "../include/InterruptHandler.h"
 #include "../include/Cartridge.h"
-#include "../include/Bus.h"
 #include "../include/CPU.h"
+#include "../include/MMU.h"
 #include <cstdio>
 
 namespace gameboy
 {
-    GameBoy::GameBoy() : emulatorState(EmulatorState::RUNNING) {}
+    GameBoy::GameBoy(std::string _romPath) : emulatorState(EmulatorState::RUNNING), romPath(_romPath) {}
 
     bool GameBoy::init()
     {
-        graphic = new Graphic(160, 144, "GameBoy-Emulator");
-        if (!graphic->init())
-        {
-            printf("ERROR : Graphics could not be loaded!");
-            return false;
-        }
+        interruptHandler = new InterruptHandler();
 
         cartridge = new Cartridge();
-        if (!cartridge->load("C:/Users/ozgur/GitHub/FreeBoy/ROMs/cpu_instrs.gb"))
+        if (!cartridge->load(romPath))
         {
-            printf("Cartridge could not be created! Error code %s\n", SDL_GetError());
+            printf("ERROR : Cartridge could not be created!\n");
             return false;
         }
 
-        cpu = new CPU(this);
+        mmu = new MMU(cartridge, interruptHandler);
+        if (!mmu->init())
+        {
+            printf("ERROR : CPU could not be initialized!");
+            return false;
+        }
+
+        cpu = new CPU(this, mmu, interruptHandler);
         if (!cpu->init())
         {
             printf("ERROR : CPU could not be initialized!");
@@ -45,7 +47,6 @@ namespace gameboy
         {
             cpu->step();
             processEvent();
-            ticks++;
         }
     }
 
@@ -73,15 +74,12 @@ namespace gameboy
 
     GameBoy::~GameBoy()
     {
-        delete cpu;
-        delete cartridge;
-        delete graphic;
+        if (cpu != nullptr) { delete cpu; }
+        if (cartridge != nullptr) { delete cartridge; }
     }
 
     void GameBoy::emulateCycles(uint8_t cycleCount)
     {
         // TODO : increment cycle
     }
-
-    Cartridge *GameBoy::getCartridge() const { return cartridge; }
 }
