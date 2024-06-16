@@ -236,7 +236,7 @@ namespace gameboy
                             Header{"RET NC", 1, 5},
                             Header{"POP DE", 1, 3},
                             Header{"JP NC,a16", 3, 4},
-                            Header{"invalid", 0, 0}, // placeholder
+                            Header{"invalid", 0, 0},
                             Header{"CALL NC,a16", 3, 6},
                             Header{"PUSH DE", 1, 4},
                             Header{"SUB A,n8", 2, 2},
@@ -244,34 +244,34 @@ namespace gameboy
                             Header{"RET C", 1, 5},
                             Header{"RETI", 1, 4},
                             Header{"JP C,a16", 3, 4},
-                            Header{"invalid", 0, 0}, // placeholder
+                            Header{"invalid", 0, 0},
                             Header{"CALL C,a16", 3, 6},
-                            Header{"invalid", 0, 0}, // placeholder
+                            Header{"invalid", 0, 0},
                             Header{"SBC A,n8", 2, 2},
                             Header{"RST 0x18", 1, 4},
 
-                            Header{"LD (a8),A", 2, 3},
+                            Header{"LD ($FF00+a8),A", 2, 3},
                             Header{"POP HL", 1, 3},
-                            Header{"LD (C),A", 1, 2},
-                            Header{"invalid", 0, 0}, // placeholder
-                            Header{"invalid", 0, 0}, // placeholder
+                            Header{"LD ($FF00+C),A", 1, 2},
+                            Header{"invalid", 0, 0},
+                            Header{"invalid", 0, 0},
                             Header{"PUSH HL", 1, 4},
                             Header{"AND A, n8", 2, 2},
                             Header{"RST 0x20", 1, 4},
                             Header{"ADD SP, e8", 2, 4},
                             Header{"JP HL", 1, 1},
                             Header{"LD (a16),A", 3, 4},
-                            Header{"invalid", 0, 0}, // placeholder
-                            Header{"invalid", 0, 0}, // placeholder
-                            Header{"invalid", 0, 0}, // placeholder
+                            Header{"invalid", 0, 0},
+                            Header{"invalid", 0, 0},
+                            Header{"invalid", 0, 0},
                             Header{"XOR A, n8", 2, 2},
                             Header{"RST 0x28", 1, 4},
 
-                            Header{"LD A,(a8)", 2, 3},
+                            Header{"LD A,($FF00+a8)", 2, 3},
                             Header{"POP AF", 1, 3},
-                            Header{"LD A,(C)", 1, 2},
+                            Header{"LD A,($FF00+C)", 1, 2},
                             Header{"DI", 1, 1},
-                            Header{"invalid", 0, 0}, // placeholder
+                            Header{"invalid", 0, 0},
                             Header{"PUSH AF", 1, 4},
                             Header{"OR A, n8", 2, 2},
                             Header{"RST 0x30", 1, 4},
@@ -279,8 +279,8 @@ namespace gameboy
                             Header{"LD SP,HL", 1, 2},
                             Header{"LD A,(a16)", 3, 4},
                             Header{"EI", 1, 1},
-                            Header{"invalid", 0, 0}, // placeholder
-                            Header{"invalid", 0, 0}, // placeholder
+                            Header{"invalid", 0, 0},
+                            Header{"invalid", 0, 0},
                             Header{"CP A, {:#04x}", 2, 2},
                             Header{"RST 0x38", 1, 4}
                     };
