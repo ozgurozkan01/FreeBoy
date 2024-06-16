@@ -159,7 +159,6 @@ namespace gameboy
         printf("Checksum    : %X (%s)\n", checksum, isChecksumPassed(checksum).c_str());
         std::cout << "---------------------------\n";
 
-        exit(-1);
         return true;
     }
 
@@ -243,6 +242,6 @@ namespace gameboy
         return  _checksum == (checksum & 0xFF) ? "PASSED" : "FAILED";
     }
 
-    void Cartridge::write(uint16_t address, uint8_t value) { }
-    uint8_t Cartridge:: read(uint16_t address) { return cartridgeData[address]; }
+    void Cartridge::write(const uint16_t address, const uint8_t value) { }
+    uint8_t Cartridge:: read(const uint16_t address) const { return cartridgeData[address]; }
 }

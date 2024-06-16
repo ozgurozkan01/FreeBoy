@@ -37,8 +37,8 @@ namespace gameboy
         bool load(const std::string& cartridgeName);
 
         //void writeHeader();
-        void write(uint16_t address, uint8_t value);
-        [[maybe_unused]] uint8_t read(uint16_t address);
+        void write(const uint16_t address, const uint8_t value);
+        [[maybe_unused]] uint8_t read(const uint16_t address) const;
     private:
         char title[16];
 
