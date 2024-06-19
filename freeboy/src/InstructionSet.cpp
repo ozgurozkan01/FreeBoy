@@ -281,7 +281,7 @@ namespace gameboy
                             Header{"EI", 1, 1},
                             Header{"invalid", 0, 0},
                             Header{"invalid", 0, 0},
-                            Header{"CP A, {:#04x}", 2, 2},
+                            Header{"CP A, n8", 2, 2},
                             Header{"RST 0x38", 1, 4}
                     };
 
