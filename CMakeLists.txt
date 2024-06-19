@@ -23,6 +23,10 @@ add_executable(FreeBoy main.cpp
         freeboy/include/MMU.h
         freeboy/src/ALU.cpp
         freeboy/include/ALU.h
+        freeboy/src/InterruptHandler.cpp
+        freeboy/include/InterruptHandler.h
+        freeboy/src/IO.cpp
+        freeboy/include/IO.h
 )
 
 target_link_libraries(FreeBoy ${SDL2_LIBRARY} -lmingw32 -lSDL2main -lSDL2 -mwindows)
