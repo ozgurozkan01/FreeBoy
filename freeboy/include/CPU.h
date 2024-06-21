@@ -6,132 +6,105 @@
 #define FREEBOY_CPU_H
 
 #include <cstdint>
-#include "Instructions.h"
+#include "InstructionSet.h"
+#include "Registers.h"
 
 namespace gameboy
 {
-    class Bus;
     class GameBoy;
+    class MMU;
+    class ALU;
+    class InterruptHandler;
 
     using namespace instruction;
-
-    namespace instruction
-    {
-        class InterruptHandler;
-    }
+    using namespace cpu_register;
 
     // The CPU flags are used to get information about the results of arithmetic and logical operations,
     // and to activate conditional branching
-    enum FlagType
+    enum class CPUFlags : uint8_t
     {
-        // LOWER 8 BITS OF AF
-        NONE = 0x0,
-        ZERO_FLAG = 1 << 7,
-        SUBTRACT_FLAG = 1 << 6, // (BCD)
-        HALF_CARRY_FLAG = 1 << 5, // (BCD)
-        CARRY_FLAG = 1 << 4
-    };
-
-    struct CoreRegisters
-    {
-        uint8_t A = 0; // Accumulator Register -> Holds result of logical, arithmetic op and data
-        uint8_t F = 0; // Flag-Status Register -> ZNHC0000
-        // General Purpose Register
-        uint8_t B = 0;
-        uint8_t C = 0;
-        uint8_t D = 0;
-        uint8_t E = 0;
-        uint8_t H = 0;
-        uint8_t L = 0;
-        uint16_t PC = 0; // Program Counter -> Holds address of the next instruction
-        uint16_t SP = 0; // Stack Pointer -> Holds address of the last added element into the stack
-
+        z = 7, // Zero Flag
+        n = 6, // Subtraction Flag
+        h = 5, // Half-Carry Flag
+        c = 4, // Carry Flag
     };
 
     class CPU {
-        friend instruction::Instructions;
+        friend ALU;
     public:
 
-        CPU(GameBoy* _gb);
-
+        CPU(GameBoy* _gb, MMU* _mmu, InterruptHandler* _interruptHandler);
+        ~CPU();
         void step();
         void emulateCycles(uint8_t cycleCount);
 
         bool init();
-        
-        bool getflag(FlagType _flag); // Get CPU Flags -> Z, N, C, H
-        void setFlag(FlagType _flag, bool _state); // Set just one specific flag
-        void setFlags(bool _zState, bool _nState, bool _hState, bool _cState); // Set whole flags at a time
-
-        [[nodiscard]] inline uint16_t getFetchedData() const { return fetchedData; };
 
     private:
-        uint8_t currentOpcode{}; // 8-bit Instruction
-        uint16_t fetchedData{}; //
-        uint16_t memoryDestination{}; // Memory address is used when isDestMem is true
+        uint8_t currentOpcode{};
 
-        Instructions::Info* currentInstruction;
-        CoreRegisters coreRegisters;
+        InstructionSet::Header* currentInstruction;
+        InstructionSet* cpuProcess;
 
-        Bus* bus;
-        GameBoy* gameBoyRef;
-        Instructions* cpuProcess;
-        InterruptHandler* interruptHandler;
+        GameBoy* gameBoyPtr;
+        MMU* mmuPtr;
+        InterruptHandler* interruptHandlerPtr;
+        ALU* alu;
+
+        /* Acuumulator and Flags */
+        Register16 AF;
+        /* General Purpose Registers */
+        Register16 BC;
+        Register16 DE;
+        Register16 HL;
+        /* Stack Pointer */
+        // Register16 SP;
+        /* Program Counter */
+        Register16 PC;
+        Register16 SP;
 
         bool isStopped{};
         bool isHalted{};
-        bool isDestMem{};
 
         void fetch();
-        void decode();
+        void execute();
 
-        bool isConditionPassed();
-        bool is16Bit(RegisterType _register) const;
+        void decodeStandardInstructions();
+        void decodeExtendedInstructions();
 
-        /* ALU Functions */
-        void alu_adc(); void alu_add(); void alu_and(); void alu_cp();
-        void alu_sub(); void alu_sbc(); void alu_or();  void alu_xor();
+        void halt();
 
-        /* STANDARD Functions */
-        void call();    void cb();      void ccf();
-        void cpl();     void daa();     void dec();
-        void di();      void ei();      void halt();
-        void inc();     void jp();      void jr();
-        void ld();      void ldh();     void nop();
-        void pop();     void push();    void ret();
-        void reti();    void rlca();    void rla();
-        void rra();     void rrca();    void rst();
-        void scf();     void stop();
+        void setFlag(const CPUFlags _flag);
+        void resetFlag(const CPUFlags _flag);
+        uint8_t readFlag(const CPUFlags _flag);
+        bool checkFlag(const CPUFlags _flag);
 
-        /* CB-Prefixed Functions */
-        void cb_bit();  void cb_res();  void cb_rl();   void cb_rlc();   void cb_rr();
-        void cb_rrc();  void cb_set();  void cb_sla();  void cb_sra();   void cb_srl();
-        void cb_swap();
+        /* STANDARD INSTRUCTIONS */
+        void load(Register16& _register, const uint16_t _value);
+        void load(Register8& _register, const uint8_t _value);
+        void load(Register8& _dstRegister, const Register8& _srcRegister);
+        void load(const uint16_t _address, const Register8& _register);
+        void load(const uint16_t _address, const uint16_t _value);
 
-        void addr_IMP();    // No Implementation
-        void addr_R();      // Address Mode on just one Register (does not matter 8 or 16 bit) -> INC C, INC BC
-        void addr_R_D8();   // Address Mode which is getting the 8 bit data and store in the register -> LD H, n8
-        void addr_R_D16();  // Address Mode which is getting the 16 bit data and store in the register ->
-        void addr_R_R();    // Address Mode which is getting the data from register and store in the another register ->
-        void addr_R_MR();   // Address Mode which is getting the data from memory address via register and store in the register ->
-        void addr_R_HLI();  // Address Mode which is getting the HL value and store in the register. Then increase HL ->
-        void addr_R_HLD();  // Address Mode which is getting the HL value and store in the register. Then decrease HL ->
-        void addr_R_A8();   // Address Mode which is getting the data from 8 Bit address in memory and store on the register ->
-        void addr_R_A16();  // Address Mode which is getting the data from 16 address in memory and store in the register ->
-        void addr_D8();     // Address Mode which is storing 8 bit value into PC ->
-        void addr_D16();    // Address Mode which is storing 16 bit value into PC ->
-        void addr_D16_R();  // Address Mode which is getting the data from register and use as 16 bit data ->
-        void addr_MR_R();   // Address Mode which is getting the data from register and store in the memory address via register ->
-        void addr_MR_D8();  // Address Mode which is getting 8-bit data and store in the memory address via register -> LD [HL], A
-        void addr_MR();     // Address Mode on just memory address via register -> INC [HL], DEC [HL]
-        void addr_HL_SPR(); // Address Mode
-        void addr_HLI_R();  // Address Mode which is getting the data from register and store in the HL. then increase HL ->
-        void addr_HLD_R();  // Address Mode which is getting the data from register and store in the HL. then decrease HL ->
-        void addr_A8_R();   // Address Mode which is getting the data from register and store in the 8 bit address in memory ->
-        void addr_A16_R();  // Address Mode which is getting the data from register and store 16 bit address in memory ->
+        void jump(const uint16_t _value);
+        void jump(const Register16& _register);
 
-        uint16_t readRegister(RegisterType _register) const; // Read value of core register
-        void writeRegister(RegisterType _register, uint16_t _value); // Read value into core register
+        void relativeJump(const uint16_t _data);
+        void call(const uint16_t _value);
+        void di(); // Disable Interrupts
+        void ret(); // Return from subroutine
+
+        /* CB INSTRUCTIONS */
+        void srl(Register8& _dstRegister); // Shift Right Logically
+        void srl(uint8_t& _value);
+
+        void rr(Register8& _dstRegister); // Rotate Register
+        void rr(uint8_t& _value);
+
+        void swap(Register8& _dstRegister); // Rotate Register
+        void swap(uint8_t& _value);
+
+        void rra(); // Rotate Register A
     };
 }
 
