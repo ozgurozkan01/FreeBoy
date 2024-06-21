@@ -7,15 +7,19 @@
 
 #include <cstdint>
 #include <array>
+#include "Registers.h"
 
 namespace gameboy
 {
     class Cartridge;
     class InterruptHandler;
+    class PPU;
+
+    using namespace cpu_register;
 
     class MMU{
     public:
-        MMU(Cartridge* _cartridge, InterruptHandler* _interruptHandler);
+        MMU(Cartridge* _cartridge, InterruptHandler* _interruptHandler, PPU* _ppu);
 
         bool init();
 
@@ -25,14 +29,18 @@ namespace gameboy
         void write16(const uint16_t _address, const uint16_t _value);
         uint16_t read16(const uint16_t _address);
 
+        void push(Register16& _sp, const Register16& _srcRegister);
+        uint16_t pop(Register16& _sp);
+
     private:
         Cartridge* cartridgePtr;
         InterruptHandler* interruptHandlerPtr;
+        PPU* ppuPtr;
 
         /* RAM */
-        std::array<uint8_t, 0x2000> workRAM;
+        std::array<uint8_t, 0x2000> workRAM = {0};
         // std::array<uint8_t, 0x2000> videoRAM;
-        std::array<uint8_t, 0x80> highRAM;
+        std::array<uint8_t, 0x80> highRAM = {0};
         // std::array<uint8_t, 0xA0> oamRAM;
     };
 }

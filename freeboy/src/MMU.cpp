@@ -5,13 +5,16 @@
 #include "../include/MMU.h"
 #include "../include/Cartridge.h"
 #include "../include/InterruptHandler.h"
+#include "../include/IO.h"
+#include "../include/PPU.h"
 #include <cstdio>
 
 namespace gameboy
 {
-    MMU::MMU(Cartridge *_cartridge, InterruptHandler* _interruptHandler) :
+    MMU::MMU(Cartridge *_cartridge, InterruptHandler* _interruptHandler, PPU* _ppu) :
             cartridgePtr(_cartridge),
-            interruptHandlerPtr(_interruptHandler)
+            interruptHandlerPtr(_interruptHandler),
+            ppuPtr(_ppu)
     {}
 
     bool MMU::init()
@@ -27,6 +30,12 @@ namespace gameboy
             printf("ERROR : interruptHandlerPtr could not be initialized!");
             return false;
         }
+
+        if (ppuPtr == nullptr)
+        {
+            printf("ERROR : ppuPtr could not be initialized!");
+            return false;
+        }
         return true;
     }
 
@@ -37,14 +46,14 @@ namespace gameboy
             cartridgePtr->write(_address, _value);
             return;
         }
-
         else if (_address < 0xA000)
         {
-            printf(" (W-VRAM) ");
+            ppuPtr->writeVRAM(_address, _value);
+            return;
         }
         else if (_address < 0xC000)
         {
-            printf(" (W-Cartridge External) ");
+            cartridgePtr->write(_address, _value);
         }
         else if (_address < 0xE000)
         {
@@ -65,11 +74,12 @@ namespace gameboy
         }
         else if (_address < 0xFF80)
         {
-            printf(" (W-I/O Registers) ");
+            printf(" (W-IO) ");
+            return;
         }
         else if (_address < 0xFFFF)
         {
-            highRAM[_address - 0x8000] = _value;
+            highRAM[_address - 0xFF80] = _value;
             return;
         }
         else if (_address == 0xFFFF)
@@ -78,6 +88,7 @@ namespace gameboy
             return;
         }
 
+        printf("\nUNSUPPORTED MEMORY ADDRESS %02X\n", _address);
         exit(-1);
     }
     uint8_t MMU::read8(const uint16_t _address)
@@ -88,11 +99,11 @@ namespace gameboy
         }
         else if (_address < 0xA000)
         {
-            printf(" (R-VRAM) ");
+            return ppuPtr->readVRAM(_address);
         }
         else if (_address < 0xC000)
         {
-            printf(" (R-Cartridge External) ");
+            return cartridgePtr->read(_address);
         }
         else if (_address < 0xE000)
         {
@@ -100,46 +111,58 @@ namespace gameboy
         }
         else if (_address < 0xFE00)
         {
-            printf(" (R-Echo RAM) ");
+            return 0;
         }
         else if (_address < 0xFEA0)
         {
-            printf(" (R-OAM RAM) ");
+            return 0;
         }
         else if (_address < 0xFF00)
         {
-            printf(" (R-Not Usable Memory) ");
+            return 0;
         }
         else if (_address < 0xFF80)
         {
-            printf(" (R-I/O Registers) ");
+            return 0;
         }
         else if (_address < 0xFFFF)
         {
-            return highRAM[_address - 0x8000];
+            return highRAM[_address - 0xFF80];
         }
         else if (_address == 0xFFFF)
         {
             return interruptHandlerPtr->getIE();
         }
 
+        printf("\nUNSUPPORTED MEMORY ADDRESS %02X\n", _address);
         exit(-1);
     }
 
     void MMU::write16(const uint16_t _address, const uint16_t _value)
     {
-        write8(_address + 1, (_value >> 8) & 0xFF);
-        write8(_address, _value & 0xFF);
+        write8(_address, _value & 0xFF); // LSB
+        write8(_address + 1, (_value >> 8) & 0xFF); // MSB
     }
 
     uint16_t MMU::read16(const uint16_t _address)
 
     {
-        uint8_t low = cartridgePtr->read(_address);
-        uint8_t high = cartridgePtr->read(_address + 1);
+        uint8_t low = read8(_address);
+        uint8_t high = read8(_address + 1);
 
-        uint16_t n16 = low | (high << 8) ;
+        return low | (high << 8);
+    }
 
-        return n16;
+    void MMU::push(Register16& _sp, const Register16& _srcRegister)
+    {
+        _sp -= 2;
+        write16(_sp.read(), _srcRegister.read());
+    }
+
+    uint16_t MMU::pop(Register16& _sp)
+    {
+        uint16_t popped = read16(_sp.read());
+        _sp += 2;
+        return popped;
     }
 }
