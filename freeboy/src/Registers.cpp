@@ -67,6 +67,16 @@ namespace gameboy
             value -= _value;
         }
 
+        void Register8::operator>>=(const uint8_t _offset)
+        {
+            value >>= _offset;
+        }
+
+        uint16_t Register8::operator&(const uint16_t _offset)
+        {
+            return value & _offset;
+        }
+
         /* -------------------------------------------------------------------------- */
 
         Register16::Register16(uint16_t _value) :

@@ -25,6 +25,8 @@ namespace gameboy
             uint8_t operator--(int); // Post-Increment
             uint8_t operator--(); // Pre-Increment
 
+            uint16_t operator&(const uint16_t _offset);
+
             void operator+=(const uint8_t _value);
             void operator-=(const uint8_t _value);
             void operator=(const Register8& _register);
@@ -32,6 +34,8 @@ namespace gameboy
             void operator^=(const Register8& _register);
             void operator|=(const Register8& _register);
             void operator&=(const uint16_t _value);
+
+            void operator>>=(const uint8_t _offset);
         private:
             uint8_t value;
         };
