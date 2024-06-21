@@ -7,6 +7,7 @@
 #include "../include/Cartridge.h"
 #include "../include/CPU.h"
 #include "../include/MMU.h"
+#include "../include/PPU.h"
 #include <cstdio>
 
 namespace gameboy
@@ -26,7 +27,9 @@ namespace gameboy
             return false;
         }
 
-        mmu = new MMU(cartridge, interruptHandler);
+        ppu = new PPU();
+
+        mmu = new MMU(cartridge, interruptHandler, ppu);
         if (!mmu->init())
         {
             printf("ERROR : CPU could not be initialized!");
@@ -49,6 +52,7 @@ namespace gameboy
         {
             cpu->step();
             processEvent();
+            ticks++;
         }
     }
 

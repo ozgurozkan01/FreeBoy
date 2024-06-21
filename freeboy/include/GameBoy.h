@@ -14,6 +14,7 @@ namespace gameboy
     class InterruptHandler;
     class Cartridge;
     class CPU;
+    class PPU;
     class MMU;
 
     enum class EmulatorState : uint8_t
@@ -31,6 +32,7 @@ namespace gameboy
         bool init();
         void run();
     private:
+
         std::string romPath;
 
         EmulatorState emulatorState;
@@ -39,6 +41,7 @@ namespace gameboy
         Cartridge* cartridge;
         CPU* cpu;
         MMU* mmu;
+        PPU* ppu;
 
         uint64_t ticks;
         void processEvent();
