@@ -27,6 +27,7 @@ add_executable(FreeBoy main.cpp
         freeboy/include/InterruptHandler.h
         freeboy/src/IO.cpp
         freeboy/include/IO.h
+        freeboy/src/PPU.cpp
 )
 
 target_link_libraries(FreeBoy ${SDL2_LIBRARY} -lmingw32 -lSDL2main -lSDL2 -mwindows)
