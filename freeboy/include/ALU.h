@@ -31,17 +31,28 @@ namespace gameboy
 
         void increment(Register16& _srcRegister);
         void increment(Register8& _srcRegister);
+        void increment(uint8_t& _value);
 
         void decrement(Register16& _srcRegister);
         void decrement(Register8& _srcRegister);
-
-        void compare(Register8& _srcRegister);
-        void compare(const uint8_t _value);
+        void decrement(uint8_t& _value);
 
         void add(const Register8& _srcRegister);
         void add(const Register16& _srcRegister);
         void addToStack(const int8_t _value);
         void add(const uint8_t _value);
+
+        //void compare(Register16& _srcRegister);
+        void compare(Register8& _srcRegister);
+        void compare(const uint8_t _value);
+
+        //void adc(const Register16& _srcRegister);
+        void adc(const Register8& _srcRegister);
+        void adc(const uint8_t _value);
+
+        //void subtract(const Register16& _srcRegister);
+        void subtract(const Register8& _srcRegister);
+        void subtract(const uint8_t _value);
 
     private:
         CPU* cpuPtr;
