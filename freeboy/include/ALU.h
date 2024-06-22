@@ -42,17 +42,30 @@ namespace gameboy
         void addToStack(const int8_t _value);
         void add(const uint8_t _value);
 
-        //void compare(Register16& _srcRegister);
         void compare(Register8& _srcRegister);
         void compare(const uint8_t _value);
 
-        //void adc(const Register16& _srcRegister);
-        void adc(const Register8& _srcRegister);
-        void adc(const uint8_t _value);
-
-        //void subtract(const Register16& _srcRegister);
         void subtract(const Register8& _srcRegister);
         void subtract(const uint8_t _value);
+
+        void adc(const Register8& _srcRegister); // Add value plus carry to A
+        void adc(const uint8_t _value);
+
+        void srl(Register8& _dstRegister); // Shift Right Logically
+        void srl(uint8_t& _value);
+
+        void rr(Register8& _dstRegister); // Rotate Register
+        void rr(uint8_t& _value);
+
+        void swap(Register8& _dstRegister); // Rotate Register
+        void swap(uint8_t& _value);
+
+        void rlc(Register8& _dstRegister);
+        void rlc(uint8_t& _value);
+
+        void rra(); // Rotate Register A
+        void daa(); // Decimal Adjust Accumulator
+        void rlca(); // Rotate register A left
 
     private:
         CPU* cpuPtr;
