@@ -92,19 +92,8 @@ namespace gameboy
         void relativeJump(const uint16_t _data);
         void call(const uint16_t _value);
         void di(); // Disable Interrupts
+        void ei(); // Enable Interrupts
         void ret(); // Return from subroutine
-
-        /* CB INSTRUCTIONS */
-        void srl(Register8& _dstRegister); // Shift Right Logically
-        void srl(uint8_t& _value);
-
-        void rr(Register8& _dstRegister); // Rotate Register
-        void rr(uint8_t& _value);
-
-        void swap(Register8& _dstRegister); // Rotate Register
-        void swap(uint8_t& _value);
-
-        void rra(); // Rotate Register A
     };
 }
 
