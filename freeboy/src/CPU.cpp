@@ -72,6 +72,12 @@ namespace gameboy
         currentInstruction = &cpuProcess->standardInstructions[currentOpcode];
 
 
+        if (currentOpcode == 0xCB)
+        {
+
+        }
+        printf("\n");
+
         char flags[16];
         sprintf(flags, "%c%c%c%c",
                 AF.lowByte().read() & (1 << static_cast<uint8_t>(CPUFlags::z)) ? 'Z' : '-',
@@ -80,8 +86,7 @@ namespace gameboy
                 AF.lowByte().read() & (1 << static_cast<uint8_t>(CPUFlags::c)) ? 'C' : '-'
         );
 
-        printf("\n");
-        printf("%08lX - PC : %02X, Opcode : (%02X %02X %02X) : (A : %02X - F : %s - BC : %04X - DE : %04X - HL : %04X - SP : %04X) - %s",
+        printf("%08lX - PC : %02X, Opcode : (%02X %02X %02X) : (A : %02X - F : %s - BC : %04X - DE : %04X - HL : %04X - SP : %04X) - %s\n",
                gameBoyPtr->ticks,
                PC.read() - 1,
                currentOpcode,
@@ -94,10 +99,11 @@ namespace gameboy
                HL.read(),
                SP.read(),
                currentInstruction->nmenomic.c_str());
-
-
-        if (gameBoyPtr->ticks == 0x30000)
-            exit(-1);
+        // Somethings are wrong in instructions
+        // NO problem until 1CFFFF
+        // Problem in 0x001DB68A
+/*        if (gameBoyPtr->ticks == 0x00028ADF)
+            exit(-1);*/
     }
 
     void CPU::execute()
@@ -108,11 +114,36 @@ namespace gameboy
 
     void CPU::emulateCycles(uint8_t cycleCount) { gameBoyPtr->emulateCycles(cycleCount); }
 
-    void CPU::load(Register16 &_register, const uint16_t _value) { _register = _value; }
-    void CPU::load(const uint16_t _address, const Register8 &_register) { mmuPtr->write8(_address, _register.read()); }
-    void CPU::load(Register8 &_register, const uint8_t _value) { _register = _value; }
-    void CPU::load(Register8 &_dstRegister, const Register8 &_srcRegister) { _dstRegister = _srcRegister; }
-    void CPU::load(const uint16_t _address, const uint16_t _value) { mmuPtr->write16(_address, _value); }
+    void CPU::load(Register16 &_register, const uint16_t _value)
+    {
+        printf("\nBefore : %02X\n", _register.read());
+        _register = _value;
+        printf("After : %02X\n", _register.read());
+    }
+    void CPU::load(const uint16_t _address, const Register8 &_register)
+    {
+        printf("\nBefore : %02X\n", mmuPtr->read8(_address));
+        mmuPtr->write8(_address, _register.read());
+        printf("After : %02X\n", mmuPtr->read8(_address));
+    }
+    void CPU::load(Register8 &_register, const uint8_t _value)
+    {
+        printf("\nBefore : %02X\n", _register.read());
+        _register = _value;
+        printf("After : %02X\n", _register.read());
+    }
+    void CPU::load(Register8 &_dstRegister, const Register8 &_srcRegister)
+    {
+        printf("\nBefore : %02X\n", _dstRegister.read());
+        _dstRegister = _srcRegister;
+        printf("After : %02X\n", _dstRegister.read());
+    }
+    void CPU::load(const uint16_t _address, const uint16_t _value)
+    {
+        //printf("\nBefore : %02X\n", mmuPtr->read16(_address));
+        mmuPtr->write16(_address, _value);
+        //printf("After : %02X\n", mmuPtr->read16(_address));
+    }
 
     void CPU::setFlag(const CPUFlags _flag) { AF.lowByte() |= (1 << static_cast<uint8_t>(_flag)); }
     void CPU::resetFlag(const CPUFlags _flag) { AF.lowByte() &= ~(1 << static_cast<uint8_t>(_flag)); }
@@ -121,38 +152,45 @@ namespace gameboy
 
     void CPU::jump(const uint16_t _value)
     {
+        printf("\nBefore : %02X\n", PC.read());
         PC = _value;
+        printf("After : %02X\n", PC.read());
     }
 
     void CPU::jump(const Register16 &_register)
     {
+        printf("\nBefore : %02X\n", PC.read());
         PC = _register;
+        printf("After : %02X\n", PC.read());
     }
 
     void CPU::relativeJump(const uint16_t _data)
     {
+        printf("\nBefore : %02X\n", PC.read());
         PC = PC.read() + _data;
+        printf("After : %02X\n", PC.read());
     }
 
     void CPU::call(const uint16_t _value)
     {
+        printf("\nBefore : %02X\n", PC.read());
         mmuPtr->push(SP, PC);
         PC = _value;
+        printf("After : %02X\n", PC.read());
     }
 
-    void CPU::di()
-    {
-        interruptHandlerPtr->setIME(false);
-    }
+    void CPU::di() { interruptHandlerPtr->setIME(false); }
+    void CPU::ei() { interruptHandlerPtr->setIME(true); }
+
 
     void CPU::ret()
     {
+        printf("\nBefore : %02X\n", PC.read());
         PC = mmuPtr->pop(SP);
+       printf("After : %02X\n", PC.read());
     }
 
-    void CPU::halt()
-    {
-    }
+    void CPU::halt() { printf("NOT IMPLEMENTED YET\n"); exit(-1); }
 
     void CPU::decodeStandardInstructions()
     {
@@ -160,760 +198,474 @@ namespace gameboy
         {
             case 0x00: // NOP - 1/4t
                 return;
-            case 0x01: // LD BC, n16 - 3/12t
-                printf("\nBefore : %02X\n", BC.read());
-                load(BC, mmuPtr->read16(PC.read()));
-                printf("After : %02X\n", BC.read());
+            case 0x01: // LD BC, n16
+            {
+                uint16_t n16 = mmuPtr->read16(PC.read());
                 PC += 2;
+                load(BC, n16);
                 return;
-            case 0x02: // LD [BC], A - 1/8t
-                printf("\nBefore : %02X\n", mmuPtr->read8(BC.read()));
-                load(BC.read(), AF.highByte());
-                printf("After : %02X\n", mmuPtr->read8(BC.read()));
-                return;
-            case 0x03: // INC BC 1/8t
-                printf("\nBefore : %02X\n", BC.read());
+            }
+            case 0x03:
                 alu->increment(BC);
-                printf("After : %02X\n", BC.read());
                 return;
-            case 0x04: // INC B - 1/4t
-                printf("\nBefore : %02X\n", BC.highByte().read());
+            case 0x04:
                 alu->increment(BC.highByte());
-                printf("After : %02X\n", BC.highByte().read());
                 return;
-            case 0x05: // DEC B - 1/4t
-                printf("\nBefore : %02X\n", BC.highByte().read());
+            case 0x05:
                 alu->decrement(BC.highByte());
-                printf("After : %02X\n", BC.highByte().read());
                 return;
-            case 0x06: // LD B, n8 - 2/8t
-                printf("\nBefore : %02X\n", BC.highByte().read());
-                load(BC.highByte(), mmuPtr->read8(PC++));
-                printf("After : %02X\n", BC.highByte().read());
-                return;
-            case 0x08: // LD [a16], SP
+            case 0x06:
             {
-                uint16_t address = mmuPtr->read16(PC.read());
-                PC += 2;
-                printf("\nBefore : %02X\n", BC.highByte().read());
-                load(address, SP.read());
-                printf("After : %02X\n", BC.highByte().read());
+                uint8_t n8 = mmuPtr->read8(PC++);
+                load(BC.highByte(), n8);
                 return;
             }
-            case 0x09: // ADD HL, BC - 1/8t
-                printf("\nBefore : %02X\n", HL.read());
-                alu->add(BC);
-                printf("After : %02X\n", HL.read());
-                return;
-            case 0x0A: // LD A, [BC] - 1/8t
+            case 0x0E:
             {
-                uint16_t data = mmuPtr->read8(BC.read());
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                load(AF.highByte(), data);
-                printf("After : %02X\n", AF.highByte().read());
+                uint8_t n8 = mmuPtr->read8(PC++);
+                load(BC.lowByte(), n8);
                 return;
             }
-            case 0x0B: // DEC BC - 1/8t
-                printf("\nBefore : %02X\n", BC.read());
-                alu->decrement(BC);
-                printf("After : %02X\n", BC.read());
-                return;
-            case 0x0C: // INC C 1/4t
-                printf("\nBefore : %02X\n", BC.lowByte().read());
-                alu->increment(BC.lowByte());
-                printf("After : %02X\n", BC.lowByte().read());
-                return;
-            case 0x0D: // DEC C - 1/4t
-                printf("\nBefore : %02X\n", BC.lowByte().read());
-                alu->decrement(BC.lowByte());
-                printf("After : %02X\n", BC.lowByte().read());
-                return;
-                return;
-            case 0x0E: // LD C, n8 - 2/8t
-                printf("\nBefore : %02X\n", BC.lowByte().read());
-                load(BC.lowByte(), mmuPtr->read8(PC++));
-                printf("After : %02X\n", BC.lowByte().read());
-                return;
-            case 0x11: // LD DE, n16 - 3/12t
-                printf("\nBefore : %02X\n", DE.read());
-                load(DE, mmuPtr->read16(PC.read()));
-                printf("After : %02X\n", DE.read());
+            case 0x11:
+            {
+                uint16_t n16 = mmuPtr->read16(PC.read());
                 PC += 2;
+                load(DE, n16);
                 return;
-            case 0x12: // LD [DE], A - 1/8t
-                printf("\nBefore : %02X\n", mmuPtr->read8(DE.read()));
-                load(DE.read(), AF.highByte());
-                printf("After : %02X\n", mmuPtr->read8(DE.read()));
-                return;
-            case 0x13: // INC DE - 1/8t
-                printf("\nBefore : %02X\n", DE.read());
+            }
+            case 0x13:
                 alu->increment(DE);
-                printf("After : %02X\n", DE.read());
-                return;
-            case 0x14: // INC D - 1/4t
-                printf("\nBefore : %02X\n", DE.highByte().read());
-                alu->increment(DE.highByte());
-                printf("After : %02X\n", DE.highByte().read());
-                return;
-            case 0x15: // DEC D - 1/4t
-                printf("\nBefore : %02X\n", DE.highByte().read());
-                alu->decrement(DE.highByte());
-                printf("After : %02X\n", DE.highByte().read());
-                return;
-            case 0x16: // LD D, n8 - 2/8t
-                printf("\nBefore : %02X\n", DE.highByte().read());
-                load(DE.highByte(), mmuPtr->read8(PC++));
-                printf("After : %02X\n", DE.highByte().read());
                 return;
             case 0x18: // JR e8 - 2/12t
             {
-                int8_t e8 = static_cast<int8_t >(mmuPtr->read8(PC++) & 0xFF);
-                printf("\nBefore : %02X\n", PC.read());
+                int8_t e8 = static_cast<int8_t>(mmuPtr->read8(PC++));
                 relativeJump(e8);
-                printf("After : %02X\n", PC.read());
                 return;
             }
-            case 0x19: // ADD HL, DE - 1/8t
-                printf("\nBefore : %02X\n", HL.read());
-                alu->add(DE);
-                printf("After : %02X\n", HL.read());
-                return;
-            case 0x1A: // LD A, [DE] - 1/8t
+            case 0x1A:
             {
-                uint16_t data = mmuPtr->read8(DE.read());
-                printf("\nBefore : %02X\n", AF.highByte().read());
+                uint16_t data = mmuPtr->read16(DE.read());
                 load(AF.highByte(), data);
-                printf("After : %02X\n", AF.highByte().read());
                 return;
             }
-            case 0x1B: // DEC DE - 1/8t
-                printf("\nBefore : %02X\n", DE.read());
-                alu->decrement(DE);
-                printf("After : %02X\n", DE.read());
-                return;
-            case 0x1C: // INC E - 1/4t
-                printf("\nBefore : %02X\n", DE.lowByte().read());
-                alu->increment(DE.lowByte());
-                printf("After : %02X\n", DE.lowByte().read());
-                return;
-            case 0x1D: // DEC E - 1/4t
-                printf("\nBefore : %02X\n", DE.lowByte().read());
+            case 0x1D:
                 alu->decrement(DE.lowByte());
-                printf("Before : %02X\n", DE.lowByte().read());
                 return;
-            case 0x1E: // LD E, n8 - 2/8t
-                printf("\nBefore : %02X\n", DE.lowByte().read());
-                load(DE.lowByte(), mmuPtr->read8(PC++));
-                printf("Before : %02X\n", DE.lowByte().read());
-                return;
-            case 0x1F:
-                rra();
-                return;
-            case 0x20: // JR NZ, e8 - 2/12-8t
+            case 0x1E:
             {
-                int8_t e8 = static_cast<int8_t >(mmuPtr->read8(PC++) & 0xFF);
-                printf("\nBefore : %02X\n", PC.read());
+                uint8_t n8 = mmuPtr->read8(PC++);
+                load(DE.lowByte(), n8);
+                return;
+            }
+            case 0x1F:
+                alu->rra();
+                return;
+            case 0x20:
+            {
+                int8_t e8 = static_cast<int8_t>(mmuPtr->read8(PC++));
                 if (!checkFlag(CPUFlags::z))
                 {
                     relativeJump(e8);
                 }
-                printf("After : %02X\n", PC.read());
-                return;
-            }
-            case 0x21: // LD HL, n16 - 3/12t
-                printf("\nBefore : %02X\n", HL.read());
-                load(HL, mmuPtr->read16(PC.read()));
-                printf("After : %02X\n", HL.read());
-                PC += 2;
-                return;
-            case 0x22: // LD [HL+], A - 1/8t
-                printf("\nBefore : %02X\n", mmuPtr->read8(HL.read()));
-                load(HL++, AF.highByte());
-                printf("After : %02X\n", mmuPtr->read8(HL.read()));
-                return;
-            case 0x23: // INC HL - 1/8t
-                printf("\nBefore : %02X\n", HL.read());
-                alu->increment(HL);
-                printf("After : %02X\n", HL.read());
-                return;
-            case 0x24: // INC H - 1/4t
-                printf("\nBefore : %02X\n", HL.highByte().read());
-                alu->increment(HL.highByte());
-                printf("After : %02X\n", HL.highByte().read());
-                return;
-            case 0x25: // DEC H - 1/4t
-                printf("\nBefore : %02X\n", HL.highByte().read());
-                alu->decrement(HL.highByte());
-                printf("After : %02X\n", HL.highByte().read());
-                return;
-            case 0x26: // LD H, n8 - 2/8t
-                printf("\nBefore : %02X\n", HL.highByte().read());
-                load(HL.highByte(), mmuPtr->read8(PC++));
-                printf("After : %02X\n", HL.highByte().read());
-                return;
-            case 0x28: // JR Z, e8 - 2/12-8t
-            {
-                int8_t e8 = static_cast<int8_t >(mmuPtr->read8(PC++) & 0xFF);
-                if (checkFlag(CPUFlags::z))
+                else
                 {
-                    printf("\nBefore : %02X\n", PC.read());
-                    relativeJump(e8);
-                    printf("After : %02X\n", PC.read());
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
                 }
                 return;
             }
-            case 0x29: // ADD HL, HL - 1/8t
-                printf("\nBefore : %02X\n",HL.read());
-                alu->add(HL);
-                printf("Before : %02X\n", HL.read());
-                return;
-            case 0x2A: // LD A, [HL+] - 1/8t
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                load(AF.highByte(), mmuPtr->read8(HL++));
-                printf("Before : %02X\n", AF.highByte().read());
-                return;
-            case 0x2B: // DEC HL - 1/8t
-                printf("\nBefore : %02X\n", HL.read());
-                alu->decrement(HL);
-                printf("After : %02X\n", HL.read());
-                return;
-            case 0x2C: // INC L - 1/4t
-                printf("\nBefore : %02X\n", HL.lowByte().read());
-                alu->increment(HL.lowByte());
-                printf("Before : %02X\n", HL.lowByte().read());
-                return;
-            case 0x2D: // DEC L - 1/4t
-                printf("\nBefore : %02X\n", HL.lowByte().read());
-                alu->decrement(HL.lowByte());
-                printf("Before : %02X\n", HL.lowByte().read());
-                return;
-            case 0x2E: // LD L, n8 - 2/8t7
-                printf("\nBefore : %02X\n", HL.lowByte().read());
-                load(HL.lowByte(), mmuPtr->read8(PC++));
-                printf("Before : %02X\n", HL.lowByte().read());
-                return;
-            case 0x30: // JR NC, e8 - 2/12-8t
+            case 0x21: // LD HL,n16 - 3/12t
             {
-                int8_t e8 = static_cast<int8_t >(mmuPtr->read8(PC++) & 0xFF);
+                uint16_t data = mmuPtr->read16(PC.read());
+                PC += 2;
+                load(HL, data);
+                return;
+            }
+            case 0x22:
+            {
+                uint16_t address = HL++;
+                load(address, AF.highByte());
+                return;
+            }
+            case 0x23:
+                alu->increment(HL);
+                return;
+            case 0x24:
+                alu->increment(HL.highByte());
+                return;
+            case 0x25:
+                alu->decrement(HL.highByte());
+                return;
+            case 0x26:
+            {
+                uint8_t n8 = mmuPtr->read8(PC++);
+                load(HL.highByte(), n8);
+                return;
+            }
+            case 0x28:
+            {
+                int8_t e8 = static_cast<int8_t>(mmuPtr->read8(PC++));
+                if (checkFlag(CPUFlags::z))
+                {
+                    relativeJump(e8);
+                }
+                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
+                }
+                return;
+            }
+            case 0x29:
+                alu->add(HL);
+                return;
+            case 0x2A: // LD A, [HL+]
+            {
+                load(AF.highByte(), mmuPtr->read8(HL++));
+                return;
+            }
+            case 0x2C:
+                alu->increment(HL.lowByte());
+                return;
+            case 0x2D:
+                alu->decrement(HL.lowByte());
+                return;
+            case 0x30:
+            {
+                int8_t e8 = static_cast<int8_t>(mmuPtr->read8(PC++));
                 if (!checkFlag(CPUFlags::c))
                 {
-                    printf("\nBefore : %02X\n", PC.read());
                     relativeJump(e8);
-                    printf("After : %02X\n", PC.read());
+                }
+                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
                 }
                 return;
             }
             case 0x31: // LD SP, n16 - 3/12t
-                printf("\nBefore : %02X\n", SP.read());
                 load(SP, mmuPtr->read16(PC.read()));
-                printf("After : %02X\n", SP.read());
                 PC += 2;
                 return;
-            case 0x32: // LD [HL-], A
-                printf("\nBefore : %02X, A : %02X\n", mmuPtr->read8(HL.read()), AF.highByte().read());
-                load(HL--, AF.highByte());
-                printf("After : %02X\n", mmuPtr->read8(HL.read() + 1));
-                return;
-            case 0x33: // INC SP - 1/8t
-                printf("\nBefore : %02X\n", SP.read());
-                alu->increment(SP);
-                printf("After : %02X\n", SP.read());
-                return;
-            case 0x34: // INC [HL] - 1/12t
+            case 0x32:
             {
-                uint8_t data = mmuPtr->read8(HL.read());
-                printf("\nBefore : %02X\n", data);
-                alu->increment(data);
-                printf("After : %02X\n", data);
-                mmuPtr->write8(HL.read(), data);
+                uint16_t address = HL--;
+                load(address, AF.highByte());
                 return;
             }
-            case 0x35: // DEC [HL] - 1/12t
+            case 0x35:
             {
-                uint8_t data = mmuPtr->read8(HL.read());
-                printf("\nBefore : %02X\n", data);
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
                 alu->decrement(data);
-                printf("After : %02X\n", data);
-                mmuPtr->write8(HL.read(), data);
+                mmuPtr->write8(address, data);
                 return;
             }
-            case 0x36: // LD [HL], n8 - 2/12t
-                printf("\nBefore : %02X, n8 : %02X\n", mmuPtr->read8(HL.read()), mmuPtr->read8(PC.read()));
-                load(HL.read(), mmuPtr->read8(PC++));
-                printf("After : %02X\n", mmuPtr->read8(HL.read()));
-                return;
-            case 0x38: // JR C, e8 - 2/12-8t
-            {
-                int8_t e8 = static_cast<int8_t >(mmuPtr->read8(PC++) & 0xFF);
-                if (checkFlag(CPUFlags::c))
-                {
-                    printf("\nBefore : %02X\n", PC.read());
-                    relativeJump(e8);
-                    printf("After : %02X\n", PC.read());
-                }
-                return;
-            }
-            case 0x39: // ADD HL, SP - 1/8t
-                printf("\nBefore : %02X\n",SP.read());
-                alu->add(SP);
-                printf("Before : %02X\n", SP.read());
-                return;
-            case 0x3A: // LD A, [HL-] - 1/8t
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                load(AF.highByte(), mmuPtr->read8(HL--));
-                printf("Before : %02X\n", AF.highByte().read());
-                return;
-            case 0x3B: // DEC SP - 1/8t
-                printf("\nBefore : %02X\n", SP.read());
-                alu->decrement(SP);
-                printf("After : %02X\n", SP.read());
-                return;
-            case 0x3C: // INC A - 1/4t
-                printf("\nBefore : %02X\n", AF.highByte().read());
+            case 0x3C:
                 alu->increment(AF.highByte());
-                printf("After : %02X\n", AF.highByte().read());
                 return;
-            case 0x3D: // DEC A - 1/4t
-                printf("\nBefore : %02X\n", AF.highByte().read());
+            case 0x3D:
                 alu->decrement(AF.highByte());
-                printf("After : %02X\n", AF.highByte().read());
                 return;
-            case 0x3E: // LD A, n8 - 2/8t
-                printf("\nBefore : %02X\n", AF.highByte().read());
+            case 0x3E: // LD A,n8 - 2/8t
                 load(AF.highByte(), mmuPtr->read8(PC++));
-                printf("After : %02X\n", AF.highByte().read());
                 return;
-            case 0x40: // LD B, B - 1/4t
-                printf("\nBefore : %02X\n", BC.highByte().read());
-                load(BC.highByte(), BC.highByte());
-                printf("After : %02X\n", BC.highByte().read());
+            case 0x46:
+            {
+                uint8_t data = mmuPtr->read8(HL.read());
+                load(BC.highByte(), data);
                 return;
-            case 0x41: // LD B, C - 1/4t
-                printf("\nBefore : %02X\n", BC.highByte().read());
-                load(BC.highByte(), BC.lowByte());
-                printf("After : %02X\n", BC.highByte().read());
-                return;
-            case 0x42: // LD B, D - 1/4t
-                printf("\nBefore : %02X\n", BC.highByte().read());
-                load(BC.highByte(), DE.highByte());
-                printf("After : %02X\n", BC.highByte().read());
-                return;
-            case 0x43: // LD B, E - 1/4t
-                printf("\nBefore : %02X\n", BC.highByte().read());
-                load(BC.highByte(), DE.lowByte());
-                printf("After : %02X\n", BC.highByte().read());
-                return;
-            case 0x44: // LD B, H - 1/4t
-                printf("\nBefore : %02X\n", BC.highByte().read());
-                load(BC.highByte(), HL.highByte());
-                printf("After : %02X\n", BC.highByte().read());
-                return;
-            case 0x45: // LD B, L - 1/4t
-                printf("\nBefore : %02X\n", BC.highByte().read());
-                load(BC.highByte(), HL.lowByte());
-                printf("After : %02X\n", BC.highByte().read());
-                return;
-            case 0x46: // LD B, [HL] - 1/8t
-                printf("\nBefore : %02X\n", BC.highByte().read());
-                load(BC.highByte(), mmuPtr->read8(HL.read()));
-                printf("After : %02X\n", BC.highByte().read());
-                return;
-            case 0x47: // LD B, A - 1/4t
-                printf("\nBefore : %02X\n", BC.highByte().read());
+            }
+            case 0x47:
                 load(BC.highByte(), AF.highByte());
-                printf("After : %02X\n", BC.highByte().read());
                 return;
-            case 0x48: // LD C, B - 1/4t
-                printf("\nBefore : %02X\n", BC.lowByte().read());
-                load(BC.lowByte(), BC.highByte());
-                printf("After : %02X\n", BC.lowByte().read());
+            case 0x4E:
+            {
+                uint8_t data = mmuPtr->read8(HL.read());
+                load(BC.lowByte(), data);
                 return;
-            case 0x49: // LD C, C - 1/4t
-                printf("\nBefore : %02X\n", BC.lowByte().read());
-                load(BC.lowByte(), BC.lowByte());
-                printf("After : %02X\n", BC.lowByte().read());
-                return;
-            case 0x4A: // LD C, D - 1/4t
-                printf("\nBefore : %02X\n", BC.lowByte().read());
-                load(BC.lowByte(), DE.highByte());
-                printf("After : %02X\n", BC.lowByte().read());
-                return;
-            case 0x4B: // LD C, E - 1/4t
-                printf("\nBefore : %02X\n", BC.lowByte().read());
-                load(BC.lowByte(), DE.lowByte());
-                printf("After : %02X\n", BC.lowByte().read());
-                return;
-            case 0x4C: // LD C, H - 1/4t
-                printf("\nBefore : %02X\n", BC.lowByte().read());
-                load(BC.lowByte(), HL.highByte());
-                printf("After : %02X\n", BC.lowByte().read());
-                return;
-            case 0x4D: // LD C, L - 1/4t
-                printf("\nBefore : %02X\n", BC.lowByte().read());
-                load(BC.lowByte(), HL.lowByte());
-                printf("After : %02X\n", BC.lowByte().read());
-                return;
-            case 0x4E: // LD C, [HL] - 1/8t
-                printf("\nBefore : %02X\n", BC.lowByte().read());
-                load(BC.lowByte(), mmuPtr->read8(HL.read()));
-                printf("After : %02X\n", BC.lowByte().read());
-                return;
-            case 0x4F: // LD C, A - 1/4t
-                printf("\nBefore : %02X, A : %02X\n", BC.lowByte().read(), AF.highByte().read());
+            }
+            case 0x4F:
                 load(BC.lowByte(), AF.highByte());
-                printf("After : %02X\n", BC.lowByte().read());
                 return;
-            case 0x50: // LD D, B - 1/4t
-                printf("\nBefore : %02X\n", DE.highByte().read());
-                load(DE.highByte(), BC.highByte());
-                printf("After : %02X\n", DE.highByte().read());
+            case 0x56:
+            {
+                uint8_t data = mmuPtr->read8(HL.read());
+                load(DE.highByte(), data);
                 return;
-            case 0x51: // LD D, C - 1/4t
-                printf("\nBefore : %02X\n", DE.highByte().read());
-                load(DE.highByte(), BC.lowByte());
-                printf("After : %02X\n", DE.highByte().read());
-                return;
-            case 0x52: // LD D D - 1/4t
-                printf("\nBefore : %02X\n", DE.highByte().read());
-                load(DE.highByte(), DE.highByte());
-                printf("After : %02X\n", DE.highByte().read());
-                return;
-            case 0x53: // LD D, E - 1/4t
-                printf("\nBefore : %02X\n", DE.highByte().read());
-                load(DE.highByte(), DE.lowByte());
-                printf("After : %02X\n", DE.highByte().read());
-                return;
-            case 0x54: // LD D, H - 1/4t
-                printf("\nBefore : %02X\n", DE.highByte().read());
-                load(DE.highByte(), HL.highByte());
-                printf("After : %02X\n", DE.highByte().read());
-                return;
-            case 0x55: // LD D, L - 1/4t
-                printf("\nBefore : %02X\n", DE.highByte().read());
-                load(DE.highByte(), HL.lowByte());
-                printf("After : %02X\n", DE.highByte().read());
-                return;
-            case 0x56: // LD D, [HL] - 1/8t
-                printf("\nBefore : %02X\n", DE.highByte().read());
-                load(DE.highByte(), mmuPtr->read8(HL.read()));
-                printf("After : %02X\n", DE.highByte().read());
-                return;
-            case 0x57: // LD D, A - 1/4t
-                printf("\nBefore : %02X, A : %02X\n", DE.highByte().read(), AF.highByte().read());
+            }
+            case 0x57:
                 load(DE.highByte(), AF.highByte());
-                printf("After : %02X\n", DE.highByte().read());
                 return;
-            case 0x58: // LD E, B - 1/4t
-                printf("\nBefore : %02X\n", DE.lowByte().read());
-                load(DE.lowByte(), BC.highByte());
-                printf("After : %02X\n", DE.lowByte().read());
-                return;
-            case 0x59: // LD E, C - 1/4t
-                printf("\nBefore : %02X\n", DE.lowByte().read());
-                load(DE.lowByte(), BC.lowByte());
-                printf("After : %02X\n", DE.lowByte().read());
-                return;
-            case 0x5A: // LD E, D - 1/4t
-                printf("\nBefore : %02X\n", DE.lowByte().read());
-                load(DE.lowByte(), DE.highByte());
-                printf("After : %02X\n", DE.lowByte().read());
-                return;
-            case 0x5B: // LD E, E - 1/4t
-                printf("\nBefore : %02X\n", DE.lowByte().read());
-                load(DE.lowByte(), DE.lowByte());
-                printf("After : %02X\n", DE.lowByte().read());
-                return;
-            case 0x5C: // LD E, H - 1/4t
-                printf("\nBefore : %02X\n", DE.lowByte().read());
-                load(DE.lowByte(), HL.highByte());
-                printf("After : %02X\n", DE.lowByte().read());
-                return;
-            case 0x5D: // LD E, L - 1/4t
-                printf("\nBefore : %02X\n", DE.lowByte().read());
-                load(DE.lowByte(), HL.lowByte());
-                printf("After : %02X\n", DE.lowByte().read());
-                return;
-            case 0x5E: // LD E, [HL] - 1/8t
-                printf("\nBefore : %02X\n", DE.lowByte().read());
-                load(DE.lowByte(), mmuPtr->read8(HL.read()));
-                printf("After : %02X\n", DE.lowByte().read());
-                return;
-            case 0x5F: // LD E, A - 1/4t
-                printf("\nBefore : %02X, A : %02X\n", DE.lowByte().read(), AF.highByte().read());
+            case 0x5F:
                 load(DE.lowByte(), AF.highByte());
-                printf("After : %02X\n", DE.lowByte().read());
                 return;
-            case 0x60: // LD H, B - 1/4t
-                printf("\nBefore : %02X\n", HL.highByte().read());
-                load(HL.highByte(), BC.highByte());
-                printf("After : %02X\n", HL.highByte().read());
+            case 0x6E:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                load(HL.lowByte(), data);
                 return;
-
-
-
-            case 0x66: // LD H, [HL] - 1/8t
-                printf("\nBefore : %02X\n", HL.highByte().read());
-                load(HL.highByte(), mmuPtr->read8(HL.read()));
-                printf("After : %02X\n", HL.highByte().read());
-                return;
-            case 0x6C: // LD L, H - 1/4t
-                printf("\nBefore : %02X\n", HL.lowByte().read());
-                load(HL.lowByte(), HL.highByte());
-                printf("After : %02X\n", HL.lowByte().read());
-                return;
-            case 0x6E: // LD L, [HL] - 1/8t
-                printf("\nBefore : %02X\n", HL.lowByte().read());
-                load(HL.lowByte(), mmuPtr->read8(HL.read()));
-                printf("After : %02X\n", HL.lowByte().read());
-                return;
-            case 0x6F: // LD L, A - 1/4t
-                printf("\nBefore : %02X\n", HL.lowByte().read());
+            }
+            case 0x6F:
                 load(HL.lowByte(), AF.highByte());
-                printf("After : %02X\n", HL.lowByte().read());
                 return;
-            case 0x70: // LD [HL], B - 1/8t
-                printf("\nBefore : %02X, C : %02X\n", mmuPtr->read8(HL.read()), BC.highByte().read());
-                load(HL.read(), BC.highByte());
-                printf("After : %02X\n", mmuPtr->read8(HL.read()));
+            case 0x70:
+            {
+                uint16_t address = HL.read();
+                load(address, BC.highByte());
                 return;
-            case 0x71: // LD [HL], C - 1/8t
-                printf("\nBefore : %02X, C : %02X\n", mmuPtr->read8(HL.read()), BC.lowByte().read());
-                load(HL.read(), BC.lowByte());
-                printf("After : %02X\n", mmuPtr->read8(HL.read()));
+            }
+            case 0x71:
+            {
+                uint16_t address = HL.read();
+                load(address, BC.lowByte());
                 return;
-            case 0x72: // LD [HL], D - 1/8t
-                printf("\nBefore : %02X, C : %02X\n", mmuPtr->read8(HL.read()), DE.highByte().read());
-                load(HL.read(), DE.highByte());
-                printf("After : %02X\n", mmuPtr->read8(HL.read()));
+            }
+            case 0x72:
+            {
+                uint16_t address = HL.read();
+                load(address, DE.highByte());
                 return;
-            case 0x76: // HALT - 1/4t
-                halt();
+            }
+            case 0x77:
+            {
+                uint16_t address = HL.read();
+                load(address, AF.highByte());
                 return;
-            case 0x77: // LD [HL], A - 1/8t
-                printf("\nBefore : %02X\n", mmuPtr->read8(HL.read()));
-                load(HL.read(), AF.highByte().read());
-                printf("After : %02X\n", mmuPtr->read8(HL.read()));
-                return;
-            case 0x78: // LD A, B - 1/4t
-                printf("\nBefore : %02X\n", AF.highByte().read());
+            }
+            case 0x78:
                 load(AF.highByte(), BC.highByte());
-                printf("After : %02X\n", AF.highByte().read());
                 return;
-            case 0x79: // LD A, C - 1/4t
-                printf("\nBefore : %02X, C : %02X\n", AF.highByte().read(), BC.lowByte().read());
+            case 0x79:
                 load(AF.highByte(), BC.lowByte());
-                printf("After : %02X\n", AF.highByte().read());
                 return;
-            case 0x7A: // LD A, D - 1/4t
-                printf("\nBefore : %02X, C : %02X\n", AF.highByte().read(), DE.highByte().read());
-                load(AF.highByte(), DE.highByte());
-                printf("After : %02X\n", AF.highByte().read());
-                return;
-            case 0x7B: // LD A, E - 1/4t
-                printf("\nBefore : %02X, C : %02X\n", AF.highByte().read(), DE.lowByte().read());
+            case 0x7B:
                 load(AF.highByte(), DE.lowByte());
-                printf("After : %02X\n", AF.highByte().read());
                 return;
             case 0x7C: // LD A, H - 1/4t
-                printf("\nBefore : %02X\n", AF.highByte().read());
                 load(AF.highByte(), HL.highByte());
-                printf("After : %02X\n", AF.highByte().read());
                 return;
             case 0x7D: // LD A, L - 1/4t
-                printf("\nBefore : %02X\n", AF.highByte().read());
                 load(AF.highByte(), HL.lowByte());
-                printf("After : %02X\n", AF.highByte().read());
                 return;
-            case 0x7E: // LD A, [HL] - 1/8t
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                load(AF.highByte(), mmuPtr->read8(HL.read()));
-                printf("After : %02X\n", AF.highByte().read());
+            case 0x7A:
+                load(AF.highByte(), DE.highByte());
                 return;
-            case 0xA9: // XOR A, C - 1/4t
-                printf("\nBefore : %02X\n", AF.highByte().read());
+            case 0x81:
+                alu->add(BC.lowByte());
+                return;
+            case 0x91:
+                alu->subtract(BC.lowByte());
+                return;
+            case 0xA9:
                 alu->xor_(BC.lowByte());
-                printf("After : %02X\n", AF.highByte().read());
                 return;
-            case 0xAE: // XOR A, [HL] - 1/8t
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                alu->xor_(mmuPtr->read8(HL.read()));
-                printf("After : %02X\n", AF.highByte().read());
+            case 0xAE:
+            {
+                uint8_t data = mmuPtr->read8(HL.read());
+                alu->xor_(data);
                 return;
-            case 0xB1: // OR A, C - 1/4t
-                printf("\nBefore : %02X\n", AF.highByte().read());
+            }
+            case 0xB1:
                 alu->or_(BC.lowByte());
-                printf("After : %02X\n", AF.highByte().read());
                 return;
             case 0xB6:
             {
                 uint16_t address = HL.read();
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                alu->or_(mmuPtr->read8(address));
-                printf("After : %02X\n", AF.highByte().read());
+                uint8_t data = mmuPtr->read8(address);
+                alu->or_(data);
                 return;
             }
-            case 0xB7: // OR A, A - 1/4t
-                printf("\nBefore : %02X\n", AF.highByte().read());
+            case 0xB7:
                 alu->or_(AF.highByte());
-                printf("After : %02X\n", AF.highByte().read());
                 return;
-            case 0xC1: // POP BC - 1/12t
+            case 0xC1:
                 printf("\nBefore : %02X\n", BC.read());
                 BC = mmuPtr->pop(SP);
                 printf("After : %02X\n", BC.read());
                 return;
-            case 0xC3: // JP a16 - 3/16t
-                printf("\nBefore : %02X\n", PC.read());
-                jump(mmuPtr->read16(PC.read()));
-                printf("After : %02X\n", PC.read());
-                return;
-            case 0xC4: // CALL NZ, a16 - 3/24-12t
+            case 0xC2:
             {
-                uint16_t n16 = mmuPtr->read16(PC.read());
-                printf("\nBefore : %02X\n", PC.read());
+                uint16_t a16 = mmuPtr->read16(PC.read());
                 PC += 2;
                 if (!checkFlag(CPUFlags::z))
                 {
-                    call(n16);
+                    jump(a16);
                 }
-                printf("After : %02X\n", PC.read());
+                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
+                }
                 return;
             }
-            case 0xC5: // PUSH BC - 1/16t
+            case 0xC3: // JP a16 - 3/16t
+            {
+                uint16_t a16 = mmuPtr->read16(PC.read());
+                PC += 2;
+                jump(a16);
+                return;
+            }
+            case 0xC4:
+            {
+                uint16_t a16 = mmuPtr->read16(PC.read());
+                PC += 2;
+                if (!checkFlag(CPUFlags::z))
+                {
+                    call(a16);
+                }
+                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
+                }
+                return;
+            }
+            case 0xC5:
+                printf("\nBC : %02x\n", BC.read());
                 mmuPtr->push(SP, BC);
                 return;
-            case 0xC6: // ADD A, n8 - 2/8t
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                alu->add(mmuPtr->read8(PC++));
-                printf("After : %02X\n", AF.highByte().read());
+            case 0xC6:
+            {
+                uint8_t n8 = mmuPtr->read8(PC++);
+                alu->add(n8);
                 return;
-            case 0xC8: // RET Z - 1/20-8t
-                printf("\nBefore : %02X, zFlag : %d\n", PC.read(), readFlag(CPUFlags::z));
+            }
+            case 0xC8:
                 if (checkFlag(CPUFlags::z))
                 {
                     ret();
                 }
-                printf("After : %02X\n", PC.read());
+                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
+                }
                 return;
             case 0xC9: // RET - 1/16t
-                printf("\nBefore : %02X\n", PC.read());
                 ret();
-                printf("After : %02X\n", PC.read());
-                return;
-            case 0xCB:
-                /* Extended Instructions (Prefix) */
                 return;
             case 0xCD: // CALL a16 - 3/24t
             {
-                printf("\nBefore : %02X\n", PC.read());
-                uint16_t n16 = mmuPtr->read16(PC.read());
+                uint16_t a16 = mmuPtr->read16(PC.read());
                 PC += 2;
-                call(n16);
-                printf("After : %02X\n", PC.read());
+                call(a16);
                 return;
             }
-            case 0xCE: // ADC A, n8 - 2/8t
-                // printf("\nBefore : %02X\n", AF.highByte().read());
-                alu->adc(mmuPtr->read8(PC++));
-                // printf("After : %02X\n", AF.highByte().read());
+            case 0xCE:
+            {
+                uint8_t n8 = mmuPtr->read8(PC++);
+                alu->adc(n8);
                 return;
-            case 0xD0: // RET NC - 1/20-8t
-                printf("\nBefore : %02X\n", PC.read());
+            }
+            case 0xD0:
                 if (!checkFlag(CPUFlags::c))
                 {
                     ret();
                 }
-                printf("After : %02X\n", PC.read());
+                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
+                }
                 return;
-            case 0xD1: // POP DE - 1/12t
+            case 0xD1:
                 printf("\nBefore : %02X\n", DE.read());
                 DE = mmuPtr->pop(SP);
                 printf("After : %02X\n", DE.read());
                 return;
-            case 0xD5: // PUSH DE - 1/16t
+            case 0xD5:
+                printf("\nDE : %02x\n", DE.read());
                 mmuPtr->push(SP, DE);
                 return;
-            case 0xD6: // SUB A, n8 - 2/8t
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                alu->subtract(mmuPtr->read8(PC++));
-                printf("After : %02X\n", AF.highByte().read());
-                return;
-            case 0xE0: // LD ($FF00+a8),A - 2/12t
+            case 0xD6:
             {
-                uint16_t address = 0xFF00 | mmuPtr->read8(PC++);
-                printf("\nBefore : %02X\n", mmuPtr->read8(address));
-                load(address, AF.highByte());
-                printf("After : %02X\n", mmuPtr->read8(address));
+                uint8_t n8 = mmuPtr->read8(PC++);
+                alu->subtract(n8);
                 return;
             }
-            case 0xE1: // POP HL - 1/12t
+            case 0xE0: // LD ($FF00+a8),A
+            {
+                uint8_t a8 = mmuPtr->read8(PC++);
+                printf("\nFF00 | DATA : %02X\n", 0xFF00 | a8);
+                uint16_t address = 0xFF00 | a8;
+                load(address, AF.highByte());
+                return;
+            }
+            case 0xE1: // POP HL
                 printf("\nBefore : %02X\n", HL.read());
                 HL = mmuPtr->pop(SP);
                 printf("After : %02X\n", HL.read());
                 return;
-            case 0xE5: // PUSH HL - 1/16t
+            case 0xE5: // PUSH HL
+                printf("\nHL : %02x\n", HL.read());
                 mmuPtr->push(SP, HL);
                 return;
-            case 0xE6: // AND A, n8 - 2/8t
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                alu->and_(mmuPtr->read8(PC++));
-                printf("After : %02X\n", AF.highByte().read());
-                return;
-            case 0xE9:
-                printf("\nBefore : %02X\n", PC.read());
-                jump(HL);
-                printf("After : %02X\n", PC.read());
-                return;
-            case 0xEA: // LD [a16], A - 3/16t
-                printf("\nBefore : %02X, address : %02X\n", mmuPtr->read8(mmuPtr->read16(PC.read())), mmuPtr->read16(PC.read()));
-                load(mmuPtr->read16(PC.read()), AF.highByte());
-                printf("After : %02X, address : %02X\n", mmuPtr->read8(mmuPtr->read16(PC.read())), mmuPtr->read16(PC.read()));
-                PC += 2;
-                return;
-            case 0XEE: // XOR A, n8 - 2/8t
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                alu->xor_(mmuPtr->read8(PC++));
-                printf("After : %02X\n", AF.highByte().read());
-                return;
-            case 0xF0: // LD A, ($FF00+a8) - 2/12t
+            case 0xE6:
             {
-                uint16_t address = 0xFF00 | mmuPtr->read8(PC++);
-                uint8_t data = mmuPtr->read8(address);
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                load(AF.highByte(), data);
-                printf("After : %02X\n", AF.highByte().read());
+                uint8_t n8 = mmuPtr->read8(PC++);
+                alu->and_(n8);
                 return;
             }
-            case 0xF1: // POP AF - 1/12t
+            case 0xE9:
+                jump(HL);
+                return;
+            case 0xEA: // LD [a16], A - 3/16t
+            {
+                uint16_t a16 = mmuPtr->read16(PC.read());
+                PC += 2;
+                load(a16, AF.highByte());
+                return;
+            }
+            case 0xEE:
+            {
+                uint8_t n8 = mmuPtr->read8(PC++);
+                alu->xor_(n8);
+                return;
+            }
+            case 0xF0: // LD A, ($FF00+a8)
+            {
+                uint8_t a8 = mmuPtr->read8(PC++);
+                uint16_t address = 0xFF00 | a8;
+                uint8_t data = mmuPtr->read8(address);
+                load(AF.highByte(), data);
+                return;
+            }
+            case 0xF1:
                 printf("\nBefore : %02X\n", AF.read());
-                AF = (mmuPtr->pop(SP) & 0xFFF0);
+                AF = mmuPtr->pop(SP) & 0xFFF0;
                 printf("After : %02X\n", AF.read());
                 return;
             case 0xF3: // DI - 1/4t
                 di();
                 return;
-            case 0xF5: // PUSH AF - 1/16t
+            case 0xF5: // PUSH AF
+                printf("\nAF : %02x\n", AF.read());
                 mmuPtr->push(SP, AF);
                 return;
-            case 0xF6: // OR A, n8 - 2/8t
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                alu->or_(mmuPtr->read8(PC++));
-                printf("After : %02X\n", AF.highByte().read());
-                return;
-            case 0xFA: // LD A, [a16] - 3/16t
+            case 0xF6:
             {
-                uint16_t address = mmuPtr->read16(PC.read());
-                PC += 2;
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                load(AF.highByte(), mmuPtr->read8(address));
-                printf("After : %02X\n", AF.highByte().read());
+                uint8_t n8 = mmuPtr->read8(PC++);
+                alu->or_(n8);
                 return;
             }
-            case 0xFE: // CP A, n8 - 2/8t
-                alu->compare(mmuPtr->read8(PC++));
+            case 0xF8:
+            {
+                int8_t e8 = static_cast<int8_t>(mmuPtr->read8(PC++));
+                uint16_t sp_e8 = SP.read() + e8;
+                load(HL, sp_e8);
                 return;
+            }
+            case 0xFA:
+            {
+                uint16_t a16 = mmuPtr->read16(PC.read());
+                PC += 2;
+                uint8_t data = mmuPtr->read8(a16);
+                load(AF.highByte(), data);
+                return;
+            }
+            case 0xFE:
+            {
+                uint8_t n8 = mmuPtr->read8(PC++);
+                alu->compare(n8);
+                return;
+            }
             default:
-                printf(" -> INVALID INSTRUCTION!");
                 exit(-1);
         }
     }
@@ -921,102 +673,25 @@ namespace gameboy
     void CPU::decodeExtendedInstructions()
     {
         currentOpcode = mmuPtr->read8(PC++);
-
-        printf("\nCB INST : %#02x\n", currentOpcode);
-
         switch (currentOpcode)
         {
-            case 0x19: // RR C - 2/8t
-                rr(BC.lowByte());
+            case 0x19:
+                alu->rr(BC.lowByte());
                 return;
-            case 0x1A:// RR D - 2/8t
-                rr(DE.highByte());
+            case 0x1A:
+                alu->rr(DE.highByte());
                 return;
-            case 0x37: // SWAP A - 2/8t
-                printf("\nBefore : %02X\n", AF.highByte().read());
-                swap(AF.highByte());
-                printf("After : %02X\n", AF.highByte().read());
+            case 0x37:
+                alu->swap(AF.highByte());
                 return;
-            case 0x38: // SRL B - 2/8t
-                srl(BC.highByte());
+            case 0x38:
+                alu->srl(BC.highByte());
                 return;
-            case 0x3F: // SRL A - 2/8t
-                srl(AF.highByte());
+            case 0x3F:
+                alu->srl(AF.highByte());
                 return;
         }
-
-        printf(" -> INVALID INSTRUCTION!");
+        printf("%#02x -> INVALID INSTRUCTION!", currentOpcode);
         exit(-1);
-        // TODO : WILL BE IMPLEMENTED CB INSTRUCTIONS
-    }
-
-    void CPU::srl(Register8 &_dstRegister)
-    {
-        uint8_t data = _dstRegister.read();
-        srl(data);
-        _dstRegister = data;
-    }
-
-    void CPU::srl(uint8_t& _value)
-    {
-        (_value & 0x1) ? setFlag(CPUFlags::c) : resetFlag(CPUFlags::c);
-
-        _value >>= 1;
-
-        _value == 0x0 ? setFlag(CPUFlags::z) : resetFlag(CPUFlags::z);
-        resetFlag(CPUFlags::n);
-        resetFlag(CPUFlags::h);
-    }
-
-    void CPU::rr(Register8 &_dstRegister)
-    {
-        uint8_t data = _dstRegister.read();
-        printf("\nBefore : %02X\n", data);
-        rr(data);
-        printf("After : %02X\n", data);
-        _dstRegister = data;
-    }
-
-    void CPU::rr(uint8_t &_value)
-    {
-        uint8_t cFlag = readFlag(CPUFlags::c);
-
-        (_value & 0x1) ? setFlag(CPUFlags::c) : resetFlag(CPUFlags::c);
-
-        _value = (_value >> 1) | (cFlag << 7);
-
-        _value == 0x0 ? setFlag(CPUFlags::z) : resetFlag(CPUFlags::z);
-        resetFlag(CPUFlags::n);
-        resetFlag(CPUFlags::h);
-    }
-
-    void CPU::rra()
-    {
-        rr(AF.highByte());
-        resetFlag(CPUFlags::z);
-    }
-
-    void CPU::swap(Register8 &_dstRegister)
-    {
-        uint8_t data = _dstRegister.read();
-        swap(data);
-        _dstRegister = data;
-    }
-
-    void CPU::swap(uint8_t &_value)
-    {
-        uint8_t lowerNibble = _value & 0x0F;
-        uint8_t upperNibble = _value & 0xF0;
-
-        uint8_t swapped = (lowerNibble << 4) | (upperNibble >> 4);
-
-        _value = swapped;
-
-        swapped == 0x0 ? setFlag(CPUFlags::z) : resetFlag(CPUFlags::z);
-        resetFlag(CPUFlags::n);
-        resetFlag(CPUFlags::h);
-        resetFlag(CPUFlags::c);
     }
 }
-
-// 1100
