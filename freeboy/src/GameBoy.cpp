@@ -8,13 +8,14 @@
 #include "../include/CPU.h"
 #include "../include/MMU.h"
 #include "../include/PPU.h"
+#include "../include/Renderer.h"
 #include <cstdio>
 
 namespace gameboy
 {
     GameBoy::GameBoy(std::string _romPath) :
     romPath(_romPath),
-    emulatorState(EmulatorState::RUNNING) {}
+    emulatorState(EmulatorState::running) {}
 
     bool GameBoy::init()
     {
@@ -24,6 +25,14 @@ namespace gameboy
         if (!cartridge->load(romPath))
         {
             printf("ERROR : Cartridge could not be created!\n");
+            return false;
+        }
+
+        renderer = new Renderer(cartridge->getTitle());
+
+        if (!renderer->init())
+        {
+            printf("ERROR : Renderer could not be created!\n");
             return false;
         }
 
@@ -48,8 +57,9 @@ namespace gameboy
 
     void GameBoy::run()
     {
-        while (emulatorState != EmulatorState::QUIT)
+        while (emulatorState != EmulatorState::quit)
         {
+            renderer->render();
             cpu->step();
             processEvent();
             ticks++;
@@ -65,13 +75,13 @@ namespace gameboy
             switch (event.key.type)
             {
                 case SDL_QUIT:
-                    emulatorState = EmulatorState::QUIT;
+                    emulatorState = EmulatorState::quit;
                     break;
                 case SDL_KEYDOWN:
                     switch (event.key.keysym.sym)
                     {
                         case SDLK_ESCAPE:
-                            emulatorState = EmulatorState::PAUSE;
+                            emulatorState = EmulatorState::pause;
                             break;
                     }
             }

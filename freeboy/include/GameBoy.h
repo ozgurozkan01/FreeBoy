@@ -16,12 +16,13 @@ namespace gameboy
     class CPU;
     class PPU;
     class MMU;
+    class Renderer;
 
     enum class EmulatorState : uint8_t
     {
-        PAUSE,
-        RUNNING,
-        QUIT
+        pause,
+        running,
+        quit
     };
 
     class GameBoy {
@@ -42,6 +43,7 @@ namespace gameboy
         CPU* cpu;
         MMU* mmu;
         PPU* ppu;
+        Renderer* renderer;
 
         uint64_t ticks;
         void processEvent();
