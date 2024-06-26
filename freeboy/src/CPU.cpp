@@ -145,6 +145,7 @@ namespace gameboy
 
     void CPU::setFlag(const CPUFlags _flag) { AF.lowByte() |= (1 << static_cast<uint8_t>(_flag)); }
     void CPU::resetFlag(const CPUFlags _flag) { AF.lowByte() &= ~(1 << static_cast<uint8_t>(_flag)); }
+    void CPU::toggleFlag(const CPUFlags _flag) { AF.lowByte() ^= (1 << static_cast<uint8_t>(_flag)); };
     uint8_t CPU::readFlag(const CPUFlags _flag) { return (AF.lowByte().read() >> static_cast<uint8_t>(_flag)) & 0x1; }
     bool CPU::checkFlag(const CPUFlags _flag) { return (AF.lowByte().read() >> static_cast<uint8_t>(_flag)) & 0x1; }
 
@@ -188,6 +189,12 @@ namespace gameboy
         printf("After : %02X\n", PC.read());
     }
 
+    void CPU::reti()
+    {
+        ret();
+        ei();
+    }
+
     void CPU::halt() { printf("NOT IMPLEMENTED YET\n"); exit(-1); }
 
     void CPU::decodeStandardInstructions()
@@ -201,6 +208,12 @@ namespace gameboy
                 uint16_t n16 = mmuPtr->read16(PC.read());
                 PC += 2;
                 load(BC, n16);
+                return;
+            }
+            case 0x02:
+            {
+                uint16_t address = BC.read();
+                load(address, AF.highByte());
                 return;
             }
             case 0x03:
@@ -225,10 +238,22 @@ namespace gameboy
             {
                 uint16_t a16 = mmuPtr->read16(PC.read());
                 PC += 2;
-
                 load(a16, SP.read());
                 return;
             }
+            case 0x09:
+                alu->add(BC);
+                return;
+            case 0x0A:
+            {
+                uint16_t address = BC.read();
+                uint8_t data = mmuPtr->read8(address);
+                load(AF.highByte(), data);
+                return;
+            }
+            case 0x0B:
+                alu->decrement(BC);
+                return;
             case 0x0C:
                 alu->increment(BC.lowByte());
                 return;
@@ -241,6 +266,9 @@ namespace gameboy
                 load(BC.lowByte(), n8);
                 return;
             }
+            case 0x0F:
+                alu->rrca();
+                return;
             case 0x10:
                 // STOP 0
                 return;
@@ -263,24 +291,36 @@ namespace gameboy
             case 0x14:
                 alu->increment(DE.highByte());
                 return;
+            case 0x15:
+                alu->decrement(DE.highByte());
             case 0x16:
             {
                 uint8_t n8 = mmuPtr->read8(PC++);
                 load(DE.highByte(), n8);
                 return;
             }
+            case 0x17:
+                alu->rla();
+                return;
             case 0x18: // JR e8 - 2/12t
             {
                 int8_t e8 = static_cast<int8_t>(mmuPtr->read8(PC++));
                 relativeJump(e8);
                 return;
             }
+            case 0x19:
+                alu->add(DE);
+                return;
             case 0x1A:
             {
-                uint8_t data = mmuPtr->read16(DE.read());
+                uint16_t address = DE.read();
+                uint8_t data = mmuPtr->read16(address);
                 load(AF.highByte(), data);
                 return;
             }
+            case 0x1B:
+                alu->decrement(DE);
+                return;
             case 0x1C:
                 alu->increment(DE.lowByte());
                 return;
@@ -311,7 +351,8 @@ namespace gameboy
             }
             case 0x21: // LD HL,n16 - 3/12t
             {
-                uint16_t data = mmuPtr->read16(PC.read());
+                uint16_t address = PC.read();
+                uint16_t data = mmuPtr->read16(address);
                 PC += 2;
                 load(HL, data);
                 return;
@@ -361,6 +402,9 @@ namespace gameboy
                 load(AF.highByte(), mmuPtr->read8(HL++));
                 return;
             }
+            case 0x2B:
+                alu->decrement(HL);
+                return;
             case 0x2C:
                 alu->increment(HL.lowByte());
                 return;
@@ -371,6 +415,11 @@ namespace gameboy
             {
                 uint8_t n8 = mmuPtr->read8(PC++);
                 load(HL.lowByte(), n8);
+                return;
+            }
+            case 0x2F:
+            {
+                alu->complement();
                 return;
             }
             case 0x30:
@@ -387,9 +436,12 @@ namespace gameboy
                 return;
             }
             case 0x31: // LD SP, n16 - 3/12t
-                load(SP, mmuPtr->read16(PC.read()));
+            {
+                uint16_t address = PC.read();
+                load(SP, mmuPtr->read16(address));
                 PC += 2;
                 return;
+            }
             case 0x32:
             {
                 uint16_t address = HL--;
@@ -399,6 +451,13 @@ namespace gameboy
             case 0x33:
                 alu->increment(SP);
                 return;
+            case 0x34:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->increment(data);
+                mmuPtr->write8(address, data);
+            }
             case 0x35:
             {
                 uint16_t address = HL.read();
@@ -430,6 +489,9 @@ namespace gameboy
             case 0x39:
                 alu->add(SP);
                 return;
+            case 0x3A:
+                load(AF.highByte(), mmuPtr->read8(HL--));
+                return;
             case 0x3B:
                 alu->decrement(SP);
                 return;
@@ -439,38 +501,113 @@ namespace gameboy
             case 0x3D:
                 alu->decrement(AF.highByte());
                 return;
+            case 0x3F:
+                alu->complementCarryFlag();
+                return;
             case 0x3E: // LD A,n8 - 2/8t
             {
                 uint8_t n8 = mmuPtr->read8(PC++);
                 load(AF.highByte(), n8);
                 return;
             }
+            case 0x40:
+                load(BC.highByte(), BC.highByte());
+                return;
+            case 0x41:
+                load(BC.highByte(), BC.lowByte());
+                return;
+            case 0x42:
+                load(BC.highByte(), DE.highByte());
+                return;
+            case 0x43:
+                load(BC.highByte(), DE.lowByte());
+                return;
+            case 0x44:
+                load(BC.highByte(), HL.highByte());
+                return;
+            case 0x45:
+                load(BC.highByte(), HL.lowByte());
+                return;
             case 0x46:
             {
-                uint8_t data = mmuPtr->read8(HL.read());
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
                 load(BC.highByte(), data);
                 return;
             }
             case 0x47:
                 load(BC.highByte(), AF.highByte());
                 return;
+            case 0x48:
+                load(BC.lowByte(), BC.highByte());
+                return;
+            case 0x49:
+                load(BC.lowByte(), BC.lowByte());
+                return;
+            case 0x4A:
+                load(BC.lowByte(), DE.highByte());
+                return;
+            case 0x4B:
+                load(BC.lowByte(), DE.lowByte());
+                return;
+            case 0x4C:
+                load(BC.lowByte(), HL.highByte());
+                return;
+            case 0x4D:
+                load(BC.lowByte(), HL.lowByte());
+                return;
             case 0x4E:
             {
-                uint8_t data = mmuPtr->read8(HL.read());
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
                 load(BC.lowByte(), data);
                 return;
             }
             case 0x4F:
                 load(BC.lowByte(), AF.highByte());
                 return;
+            case 0x50:
+                load(DE.highByte(), BC.highByte());
+                return;
+            case 0x51:
+                load(DE.highByte(), BC.lowByte());
+                return;
+            case 0x52:
+                load(DE.highByte(), DE.highByte());
+                return;
+            case 0x53:
+                load(DE.highByte(), DE.lowByte());
+                return;
+            case 0x54:
+                load(DE.highByte(), HL.highByte());
+                return;
+            case 0x55:
+                load(DE.highByte(), HL.lowByte());
+                return;
             case 0x56:
             {
-                uint8_t data = mmuPtr->read8(HL.read());
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
                 load(DE.highByte(), data);
                 return;
             }
             case 0x57:
                 load(DE.highByte(), AF.highByte());
+                return;
+            case 0x58:
+                load(DE.lowByte(), BC.highByte());
+                return;
+            case 0x59:
+                load(DE.lowByte(), BC.lowByte());
+                return;
+            case 0x5A:
+                load(DE.lowByte(), DE.highByte());
+                return;
+            case 0x5B:
+                load(DE.lowByte(), DE.lowByte());
+                return;
+            case 0x5C:
+                load(DE.lowByte(), HL.highByte());
                 return;
             case 0x5D:
                 load(DE.lowByte(), HL.lowByte());
@@ -485,8 +622,23 @@ namespace gameboy
             case 0x5F:
                 load(DE.lowByte(), AF.highByte());
                 return;
+            case 0x60:
+                load(HL.highByte(), BC.highByte());
+                return;
+            case 0x61:
+                load(HL.highByte(), BC.lowByte());
+                return;
             case 0x62:
                 load(HL.highByte(), DE.highByte());
+                return;
+            case 0x63:
+                load(HL.highByte(), DE.lowByte());
+                return;
+            case 0x64:
+                load(HL.highByte(), HL.highByte());
+                return;
+            case 0x65:
+                load(HL.highByte(), HL.lowByte());
                 return;
             case 0x66:
             {
@@ -498,8 +650,23 @@ namespace gameboy
             case 0x67:
                 load(HL.highByte(), AF.highByte());
                 return;
+            case 0x68:
+                load(HL.lowByte(), BC.highByte());
+                return;
+            case 0x69:
+                load(HL.lowByte(), BC.lowByte());
+                return;
+            case 0x6A:
+                load(HL.lowByte(), DE.highByte());
+                return;
             case 0x6B:
                 load(HL.lowByte(), DE.lowByte());
+                return;
+            case 0x6C:
+                load(HL.lowByte(), HL.highByte());
+                return;
+            case 0x6D:
+                load(HL.lowByte(), HL.lowByte());
                 return;
             case 0x6E:
             {
@@ -534,7 +701,23 @@ namespace gameboy
                 uint16_t address = HL.read();
                 load(address, DE.lowByte());
                 return;
-            }            case 0x77:
+            }
+            case 0x74:
+            {
+                uint16_t address = HL.read();
+                load(address, HL.highByte());
+                return;
+            }
+            case 0x75:
+            {
+                uint16_t address = HL.read();
+                load(address, HL.lowByte());
+                return;
+            }
+            case 0x76:
+                halt();
+                return;
+            case 0x77:
             {
                 uint16_t address = HL.read();
                 load(address, AF.highByte());
@@ -565,21 +748,171 @@ namespace gameboy
                 load(AF.highByte(), data);
                 return;
             }
+            case 0x7F:
+                load(AF.highByte(), AF.highByte());
+                return;
+            case 0x80:
+                alu->add(BC.highByte());
+                return;
             case 0x81:
                 alu->add(BC.lowByte());
+                return;
+            case 0x82:
+                alu->add(DE.highByte());
+                return;
+            case 0x83:
+                alu->add(DE.lowByte());
+                return;
+            case 0x84:
+                alu->add(HL.highByte());
+                return;
+            case 0x85:
+                alu->add(HL.lowByte());
+                return;
+            case 0x86:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->add(data);
+                return;
+            }
+            case 0x87:
+                alu->add(AF.highByte());
+                return;
+            case 0x88:
+                alu->adc(BC.highByte());
+                return;
+            case 0x89:
+                alu->adc(BC.lowByte());
+                return;
+            case 0x8A:
+                alu->adc(DE.highByte());
+                return;
+            case 0x8B:
+                alu->adc(DE.lowByte());
+                return;
+            case 0x8C:
+                alu->adc(HL.highByte());
+                return;
+            case 0x8D:
+                alu->adc(HL.lowByte());
+                return;
+            case 0x8E:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->adc(data);
+                return;
+            }
+            case 0x8F:
+                alu->adc(AF.highByte());
+                return;
+            case 0x90:
+                alu->subtract(BC.highByte());
                 return;
             case 0x91:
                 alu->subtract(BC.lowByte());
                 return;
+            case 0x92:
+                alu->subtract(DE.highByte());
+                return;
+            case 0x93:
+                alu->subtract(DE.lowByte());
+                return;
+            case 0x94:
+                alu->subtract(HL.highByte());
+                return;
+            case 0x95:
+                alu->subtract(HL.lowByte());
+                return;
+            case 0x96:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->subtract(data);
+                return;
+            }
+            case 0x97:
+                alu->subtract(AF.highByte());
+                return;
+            case 0x98:
+                alu->subtractCarry(BC.highByte());
+                return;
+            case 0x99:
+                alu->subtractCarry(BC.lowByte());
+                return;
+            case 0x9A:
+                alu->subtractCarry(DE.highByte());
+                return;
+            case 0x9B:
+                alu->subtractCarry(DE.lowByte());
+                return;
+            case 0x9C:
+                alu->subtractCarry(HL.highByte());
+                return;
+            case 0x9D:
+                alu->subtractCarry(HL.lowByte());
+                return;
+            case 0x9E:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->subtractCarry(data);
+                return;
+            }
+            case 0x9F:
+                alu->subtractCarry(AF.highByte());
+                return;
+            case 0xA0:
+                alu->and_(BC.highByte());
+                return;
+            case 0xA1:
+                alu->and_(BC.lowByte());
+                return;
+            case 0xA2:
+                alu->and_(DE.highByte());
+                return;
+            case 0xA3:
+                alu->and_(DE.lowByte());
+                return;
+            case 0xA4:
+                alu->and_(HL.highByte());
+                return;
+            case 0xA5:
+                alu->and_(HL.lowByte());
+                return;
+            case 0xA6:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->and_(data);
+                return;
+            }
+            case 0xA7:
+                alu->and_(AF.highByte());
+                return;
+            case 0xA8:
+                alu->xor_(BC.highByte());
+                return;
             case 0xA9:
                 alu->xor_(BC.lowByte());
+                return;
+            case 0xAA:
+                alu->xor_(DE.highByte());
+                return;
+            case 0xAB:
+                alu->xor_(DE.lowByte());
+                return;
+            case 0xAC:
+                alu->xor_(HL.highByte());
                 return;
             case 0xAD:
                 alu->xor_(HL.lowByte());
                 return;
             case 0xAE:
             {
-                uint8_t data = mmuPtr->read8(HL.read());
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
                 alu->xor_(data);
                 return;
             }
@@ -591,6 +924,18 @@ namespace gameboy
                 return;
             case 0xB1:
                 alu->or_(BC.lowByte());
+                return;
+            case 0xB2:
+                alu->or_(DE.highByte());
+                return;
+            case 0xB3:
+                alu->or_(DE.lowByte());
+                return;
+            case 0xB4:
+                alu->or_(HL.highByte());
+                return;
+            case 0xB5:
+                alu->or_(HL.lowByte());
                 return;
             case 0xB6:
             {
@@ -614,6 +959,22 @@ namespace gameboy
             case 0xBB:
                 alu->compare(DE.lowByte());
                 return;
+            case 0xBC:
+                alu->compare(HL.highByte());
+                return;
+            case 0xBD:
+                alu->compare(HL.lowByte());
+                return;
+            case 0xBE:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->compare(data);
+                return;
+            }
+            case 0xBF:
+                alu->compare(AF.highByte());
+                return;
             case 0xC1:
                 printf("\nBefore : %02X\n", BC.read());
                 BC = mmuPtr->pop(SP);
@@ -621,7 +982,8 @@ namespace gameboy
                 return;
             case 0xC2:
             {
-                uint16_t a16 = mmuPtr->read16(PC.read());
+                uint16_t address = PC.read();
+                uint16_t a16 = mmuPtr->read16(address);
                 PC += 2;
                 if (!checkFlag(CPUFlags::z))
                 {
@@ -635,14 +997,16 @@ namespace gameboy
             }
             case 0xC3: // JP a16 - 3/16t
             {
-                uint16_t a16 = mmuPtr->read16(PC.read());
+                uint16_t address = PC.read();
+                uint16_t a16 = mmuPtr->read16(address);
                 PC += 2;
                 jump(a16);
                 return;
             }
             case 0xC4:
             {
-                uint16_t a16 = mmuPtr->read16(PC.read());
+                uint16_t address = PC.read();
+                uint16_t a16 = mmuPtr->read16(address);
                 PC += 2;
                 if (!checkFlag(CPUFlags::z))
                 {
@@ -664,6 +1028,9 @@ namespace gameboy
                 alu->add(n8);
                 return;
             }
+            case 0xC7:
+                rst(0x00);
+                return;
             case 0xC8:
                 if (checkFlag(CPUFlags::z))
                 {
@@ -677,9 +1044,40 @@ namespace gameboy
             case 0xC9: // RET - 1/16t
                 ret();
                 return;
+            case 0xCA:
+            {
+                uint16_t address = PC.read();
+                uint16_t a16 = mmuPtr->read16(address);
+                PC += 2;
+                if (checkFlag(CPUFlags::z))
+                {
+                    jump(a16);
+                }
+                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
+                }
+                return;
+            }
+            case 0xCC:
+            {
+                uint16_t address = PC.read();
+                uint16_t a16 = mmuPtr->read16(address);
+                PC += 2;
+                if (checkFlag(CPUFlags::z))
+                {
+                    call(a16);
+                }
+                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
+                }
+                return;
+            }
             case 0xCD: // CALL a16 - 3/24t
             {
-                uint16_t a16 = mmuPtr->read16(PC.read());
+                uint16_t address = PC.read();
+                uint16_t a16 = mmuPtr->read16(address);
                 PC += 2;
                 call(a16);
                 return;
@@ -690,6 +1088,9 @@ namespace gameboy
                 alu->adc(n8);
                 return;
             }
+            case 0xCF:
+                rst(0x08);
+                return;
             case 0xD0:
                 if (!checkFlag(CPUFlags::c))
                 {
@@ -705,6 +1106,36 @@ namespace gameboy
                 DE = mmuPtr->pop(SP);
                 printf("After : %02X\n", DE.read());
                 return;
+            case 0xD2:
+            {
+                uint16_t address = PC.read();
+                uint16_t a16 = mmuPtr->read16(address);
+                PC += 2;
+                if (!checkFlag(CPUFlags::c))
+                {
+                    jump(a16);
+                }
+                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
+                }
+                return;
+            }
+            case 0xD4:
+            {
+                uint16_t address = PC.read();
+                uint16_t a16 = mmuPtr->read16(address);
+                PC += 2;
+                if (!checkFlag(CPUFlags::c))
+                {
+                    call(a16);
+                }
+                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
+                }
+                return;
+            }
             case 0xD5:
                 printf("\nDE : %02x\n", DE.read());
                 mmuPtr->push(SP, DE);
@@ -715,6 +1146,9 @@ namespace gameboy
                 alu->subtract(n8);
                 return;
             }
+            case 0xD7:
+                rst(0x10);
+                return;
             case 0xD8:
                 if (checkFlag(CPUFlags::c))
                 {
@@ -725,12 +1159,48 @@ namespace gameboy
                     printf("\nCONDITION IS FALSE!!!!!!\n");
                 }
                 return;
+            case 0xD9:
+                reti();
+                return;
+            case 0xDA:
+            {
+                uint16_t address = PC.read();
+                uint16_t a16 = mmuPtr->read16(address);
+                PC += 2;
+                if (checkFlag(CPUFlags::c))
+                {
+                    jump(a16);
+                }
+                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
+                }
+                return;
+            }
+            case 0xDC:
+            {
+                uint16_t address = PC.read();
+                uint16_t a16 = mmuPtr->read16(address);
+                PC += 2;
+                if (checkFlag(CPUFlags::c))
+                {
+                    call(a16);
+                }
+                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
+                }
+                return;
+            }
             case 0xDE:
             {
                 uint8_t n8 = mmuPtr->read8(PC++);
                 alu->subtractCarry(n8);
                 return;
             }
+            case 0xDF:
+                rst(0x18);
+                return;
             case 0xE0: // LD ($FF00+a8),A
             {
                 uint8_t a8 = mmuPtr->read8(PC++);
@@ -744,9 +1214,25 @@ namespace gameboy
                 HL = mmuPtr->pop(SP);
                 printf("After : %02X\n", HL.read());
                 return;
+            case 0xE2:
+            {
+                uint8_t C = BC.lowByte().read();
+                uint16_t address = 0xFF00 | C;
+                load(address, AF.highByte());
+                return;
+            }
             case 0xE5: // PUSH HL
                 printf("\nHL : %02x\n", HL.read());
                 mmuPtr->push(SP, HL);
+                return;
+            case 0xE6:
+            {
+                uint8_t n8 = mmuPtr->read8(PC++);
+                alu->and_(n8);
+                return;
+            }
+            case 0xE7:
+                rst(0x20);
                 return;
             case 0xE8:
             {
@@ -754,18 +1240,13 @@ namespace gameboy
                 alu->addToStack(data);
                 return;
             }
-            case 0xE6:
-            {
-                uint8_t n8 = mmuPtr->read8(PC++);
-                alu->and_(n8);
-                return;
-            }
             case 0xE9:
                 jump(HL);
                 return;
             case 0xEA: // LD [a16], A - 3/16t
             {
-                uint16_t a16 = mmuPtr->read16(PC.read());
+                uint16_t address = PC.read();
+                uint16_t a16 = mmuPtr->read16(address);
                 PC += 2;
                 load(a16, AF.highByte());
                 return;
@@ -776,6 +1257,9 @@ namespace gameboy
                 alu->xor_(n8);
                 return;
             }
+            case 0xEF:
+                rst(0x28);
+                return;
             case 0xF0: // LD A, ($FF00+a8)
             {
                 uint8_t a8 = mmuPtr->read8(PC++);
@@ -789,6 +1273,14 @@ namespace gameboy
                 AF = mmuPtr->pop(SP) & 0xFFF0;
                 printf("After : %02X\n", AF.read());
                 return;
+            case 0xF2:
+            {
+                uint8_t C = BC.lowByte().read();
+                uint16_t address = 0xFF00 | C;
+                uint8_t data = mmuPtr->read8(address);
+                load(AF.highByte(), data);
+                return;
+            }
             case 0xF3: // DI - 1/4t
                 di();
                 return;
@@ -802,6 +1294,9 @@ namespace gameboy
                 alu->or_(n8);
                 return;
             }
+            case 0xF7:
+                rst(0x30);
+                return;
             case 0xF8:
             {
                 uint16_t e8 = mmuPtr->read8(PC++);
@@ -823,7 +1318,8 @@ namespace gameboy
                 return;
             case 0xFA:
             {
-                uint16_t a16 = mmuPtr->read16(PC.read());
+                uint16_t address = PC.read();
+                uint16_t a16 = mmuPtr->read16(address);
                 PC += 2;
                 uint8_t data = mmuPtr->read8(a16);
                 load(AF.highByte(), data);
@@ -838,6 +1334,9 @@ namespace gameboy
                 alu->compare(n8);
                 return;
             }
+            case 0xFF:
+                rst(0x38);
+                return;
             default:
                 exit(-1);
         }
@@ -869,5 +1368,11 @@ namespace gameboy
         }
         printf("%#02x -> INVALID INSTRUCTION!", currentOpcode);
         exit(-1);
+    }
+
+    void CPU::rst(const uint8_t vector)
+    {
+        mmuPtr->push(SP, PC);
+        PC = vector;
     }
 }

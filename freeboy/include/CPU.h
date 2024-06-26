@@ -76,6 +76,7 @@ namespace gameboy
 
         void setFlag(const CPUFlags _flag);
         void resetFlag(const CPUFlags _flag);
+        void toggleFlag(const CPUFlags _flag);
         uint8_t readFlag(const CPUFlags _flag);
         bool checkFlag(const CPUFlags _flag);
 
@@ -91,9 +92,11 @@ namespace gameboy
 
         void relativeJump(const uint16_t _data);
         void call(const uint16_t _value);
-        void di(); // Disable Interrupts
-        void ei(); // Enable Interrupts
-        void ret(); // Return from subroutine
+        void rst(const uint8_t vector);
+        void di();
+        void ei();
+        void ret();
+        void reti();
     };
 }
 
