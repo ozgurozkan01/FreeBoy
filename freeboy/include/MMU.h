@@ -14,6 +14,7 @@ namespace gameboy
     class Cartridge;
     class InterruptHandler;
     class PPU;
+    class IO;
 
     using namespace cpu_register;
 
@@ -36,6 +37,7 @@ namespace gameboy
         Cartridge* cartridgePtr;
         InterruptHandler* interruptHandlerPtr;
         PPU* ppuPtr;
+        IO* ioHandler;
 
         /* RAM */
         std::array<uint8_t, 0x2000> workRAM = {0};

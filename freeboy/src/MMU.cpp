@@ -74,7 +74,7 @@ namespace gameboy
         }
         else if (_address < 0xFF80)
         {
-            printf(" (W-IO) ");
+            ioHandler->write(_address, _value);
             return;
         }
         else if (_address < 0xFFFF)
@@ -111,19 +111,19 @@ namespace gameboy
         }
         else if (_address < 0xFE00)
         {
-            return 0;
+            printf(" (W-Echo RAM) ");
         }
         else if (_address < 0xFEA0)
         {
-            return 0;
+            printf(" (W-OAM RAM) ");
         }
         else if (_address < 0xFF00)
         {
-            return 0;
+            printf(" (W-Not Usable Memory) ");
         }
         else if (_address < 0xFF80)
         {
-            return 0;
+            return ioHandler->read(_address);
         }
         else if (_address < 0xFFFF)
         {
@@ -155,8 +155,10 @@ namespace gameboy
 
     void MMU::push(Register16& _sp, const Register16& _srcRegister)
     {
-        _sp -= 2;
-        write16(_sp.read(), _srcRegister.read());
+        _sp--;
+        write8(_sp.read(), (_srcRegister.read() >> 8) & 0xFF);
+        _sp--;
+        write8(_sp.read(), _srcRegister.read() & 0xFF);
     }
 
     uint16_t MMU::pop(Register16& _sp)
