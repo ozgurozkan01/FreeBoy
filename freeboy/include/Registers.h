@@ -30,6 +30,7 @@ namespace gameboy
             void operator+=(const uint8_t _value);
             void operator-=(const uint8_t _value);
             void operator=(const Register8& _register);
+            void operator=(const uint8_t& _value);
 
             void operator^=(const Register8& _register);
             void operator|=(const Register8& _register);
