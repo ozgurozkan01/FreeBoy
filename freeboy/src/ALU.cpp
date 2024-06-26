@@ -8,8 +8,7 @@
 
 namespace gameboy
 {
-    ALU::ALU(CPU *_cpu) :
-            cpuPtr(_cpu)
+    ALU::ALU(CPU *_cpu) : cpuPtr(_cpu)
     {}
 
     bool ALU::init()
@@ -131,6 +130,30 @@ namespace gameboy
         _value > cpuPtr->AF.highByte().read() ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
     }
 
+    void ALU::swap(Register8 &_dstRegister)
+    {
+        uint8_t data = _dstRegister.read();
+        swap(data);
+        _dstRegister = data;
+    }
+
+    void ALU::swap(uint8_t &_value)
+    {
+        uint8_t lowerNibble = _value & 0x0F;
+        uint8_t upperNibble = _value & 0xF0;
+
+        uint8_t swapped = (lowerNibble << 4) | (upperNibble >> 4);
+
+        printf("\nBefore : %02X\n", _value);
+        _value = swapped;
+        printf("After : %02X\n", _value);
+
+        swapped == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->resetFlag(CPUFlags::n);
+        cpuPtr->resetFlag(CPUFlags::h);
+        cpuPtr->resetFlag(CPUFlags::c);
+    }
+
     void ALU::add(const uint8_t _value)
     {
         (cpuPtr->AF.highByte().read() & 0x0F) + (_value & 0x0F) > 0x0F ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
@@ -176,6 +199,29 @@ namespace gameboy
         cpuPtr->resetFlag(CPUFlags::n);
     }
 
+    void ALU::adc(const Register8 &_srcRegister)
+    {
+        adc(_srcRegister.read());
+    }
+
+    void ALU::adc(const uint8_t _value)
+    {
+        uint8_t A = cpuPtr->AF.highByte().read();
+        bool cFlag = cpuPtr->readFlag(CPUFlags::c);
+
+        (A & 0xF) + (_value & 0xF) + cFlag > 0xF ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
+        (A & 0xFF) + (_value & 0xFF) + cFlag > 0xFF ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
+        cpuPtr->resetFlag(CPUFlags::n);
+
+        printf("\nBefore : %02X\n", cpuPtr->AF.highByte().read());
+        cpuPtr->AF.highByte() += _value + cFlag;
+        printf("After : %02X\n", cpuPtr->AF.highByte().read());
+
+        uint8_t result = cpuPtr->AF.highByte().read();
+
+        result == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+    }
+
     void ALU::and_(const Register8 _srcRegister)
     {
         and_(_srcRegister.read());
@@ -215,22 +261,22 @@ namespace gameboy
         subtract(_srcRegister.read());
     }
 
-    void ALU::adc(const Register8 &_srcRegister)
+    void ALU::subtractCarry(const Register8 &_srcRegister)
     {
-        adc(_srcRegister.read());
+        subtractCarry(_srcRegister.read());
     }
 
-    void ALU::adc(const uint8_t _value)
+    void ALU::subtractCarry(const uint8_t _value)
     {
         uint8_t A = cpuPtr->AF.highByte().read();
         bool cFlag = cpuPtr->readFlag(CPUFlags::c);
 
-        (A & 0xF) + (_value & 0xF) + cFlag > 0xF ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
-        (A & 0xFF) + (_value & 0xFF) + cFlag > 0xFF ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
-        cpuPtr->resetFlag(CPUFlags::n);
+        ((_value & 0x0F) + cFlag) > (A & 0x0F) ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
+        (_value + cFlag) > A ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
+        cpuPtr->setFlag(CPUFlags::n);
 
         printf("\nBefore : %02X\n", cpuPtr->AF.highByte().read());
-        cpuPtr->AF.highByte() += _value + cFlag;
+        cpuPtr->AF.highByte() = A - _value - cFlag;
         printf("After : %02X\n", cpuPtr->AF.highByte().read());
 
         uint8_t result = cpuPtr->AF.highByte().read();
@@ -256,6 +302,45 @@ namespace gameboy
         _value == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
         cpuPtr->resetFlag(CPUFlags::n);
         cpuPtr->resetFlag(CPUFlags::h);
+    }
+
+    void ALU::sla(Register8 &_dstRegister)
+    {
+        uint8_t data = _dstRegister.read();
+        sla(data);
+        _dstRegister = data;
+    }
+
+    void ALU::sla(uint8_t &_value)
+    {
+        bool newFlagC = (_value >> 7) & 0x01;
+
+        _value <<= 1;
+
+        _value == 0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->resetFlag(CPUFlags::n);
+        cpuPtr->resetFlag(CPUFlags::h);
+        newFlagC ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
+    }
+
+    void ALU::sra(Register8 &_dstRegister)
+    {
+        uint8_t data = _dstRegister.read();
+        sra(data);
+        _dstRegister = data;
+    }
+
+    void ALU::sra(uint8_t &_value)
+    {
+        uint8_t msb = _value & 0x80;
+        bool newFlagC = _value & 0x01;
+
+        _value = (_value >> 1) | msb;
+
+        _value == 0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->resetFlag(CPUFlags::n);
+        cpuPtr->resetFlag(CPUFlags::h);
+        newFlagC ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
     }
 
     void ALU::rr(Register8 &_dstRegister)
@@ -286,28 +371,97 @@ namespace gameboy
         cpuPtr->resetFlag(CPUFlags::z);
     }
 
-    void ALU::swap(Register8 &_dstRegister)
+    void ALU::rl(Register8 &_dstRegister)
     {
         uint8_t data = _dstRegister.read();
-        swap(data);
+        rl(data);
         _dstRegister = data;
     }
 
-    void ALU::swap(uint8_t &_value)
+    void ALU::rl(uint8_t &_value)
     {
-        uint8_t lowerNibble = _value & 0x0F;
-        uint8_t upperNibble = _value & 0xF0;
+        bool oldFlagC = cpuPtr->readFlag(CPUFlags::c);
+        bool newFlagC = (_value >> 7) & 0x01;
 
-        uint8_t swapped = (lowerNibble << 4) | (upperNibble >> 4);
+        _value = (_value << 1) | oldFlagC;
 
-        printf("\nBefore : %02X\n", _value);
-        _value = swapped;
-        printf("After : %02X\n", _value);
-
-        swapped == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        _value == 0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
         cpuPtr->resetFlag(CPUFlags::n);
         cpuPtr->resetFlag(CPUFlags::h);
-        cpuPtr->resetFlag(CPUFlags::c);
+        newFlagC ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
+    }
+
+    void ALU::rla()
+    {
+        rl(cpuPtr->AF.highByte());
+        cpuPtr->resetFlag(CPUFlags::z);
+    }
+
+    void ALU::rlc(Register8 &_dstRegister)
+    {
+        uint8_t data = _dstRegister.read();
+        rlc(data);
+        _dstRegister = data;
+    }
+
+    void ALU::rlc(uint8_t &_value)
+    {
+        uint8_t outBit = (_value & 0x80) >> 7 ;
+
+        printf("\nBefore : %02X\n", _value);
+        _value = (_value << 1) | outBit;
+        printf("After : %02X\n", _value);
+
+        _value == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->resetFlag(CPUFlags::n);
+        cpuPtr->resetFlag(CPUFlags::h);
+        outBit == 0x0 ? cpuPtr->resetFlag(CPUFlags::c) : cpuPtr->setFlag(CPUFlags::c);
+    }
+
+    void ALU::rlca()
+    {
+        rlc(cpuPtr->AF.highByte());
+        cpuPtr->resetFlag(CPUFlags::z);
+    }
+
+    void ALU::rrca()
+    {
+        rrc(cpuPtr->AF.highByte());
+        cpuPtr->resetFlag(CPUFlags::z);
+    }
+
+    void ALU::rrc(Register8 &_dstRegister)
+    {
+        uint8_t data = _dstRegister.read();
+        rrc(data);
+        _dstRegister = data;
+    }
+
+    void ALU::rrc(uint8_t &_value)
+    {
+        bool newCFlag = _value & 0x01;
+
+        _value = (_value >> 1) | (newCFlag << 7);
+
+        _value == 0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->resetFlag(CPUFlags::n);
+        cpuPtr->resetFlag(CPUFlags::h);
+        newCFlag ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
+    }
+
+    void ALU::complement()
+    {
+        cpuPtr->AF.highByte() = ~(cpuPtr->AF.highByte().read());
+
+        cpuPtr->setFlag(CPUFlags::n);
+        cpuPtr->setFlag(CPUFlags::h);
+    }
+
+    void ALU::complementCarryFlag()
+    {
+        cpuPtr->resetFlag(CPUFlags::n);
+        cpuPtr->resetFlag(CPUFlags::h);
+        cpuPtr->toggleFlag(CPUFlags::c);
     }
 
     void ALU::daa()
@@ -344,53 +498,42 @@ namespace gameboy
         cpuPtr->resetFlag(CPUFlags::h);
     }
 
-    void ALU::rlca()
-    {
-        rlc(cpuPtr->AF.highByte());
-        cpuPtr->resetFlag(CPUFlags::z);
-    }
-
-    void ALU::rlc(Register8 &_dstRegister)
+    void ALU::res(Register8 &_dstRegister, const uint8_t _bit)
     {
         uint8_t data = _dstRegister.read();
-        rlc(data);
+        res(data, _bit);
         _dstRegister = data;
     }
 
-    void ALU::rlc(uint8_t &_value)
+    void ALU::res(uint8_t &_value, const uint8_t _bit)
     {
-        uint8_t outBit = (_value & 0x80) >> 7 ;
+        _value &= ~(1 << _bit);
+    }
 
-        printf("\nBefore : %02X\n", _value);
-        _value = (_value << 1) | outBit;
-        printf("After : %02X\n", _value);
+    void ALU::set(Register8 &_dstRegister, const uint8_t _bit)
+    {
+        uint8_t data = _dstRegister.read();
+        set(data, _bit);
+        _dstRegister = data;
+    }
 
-        _value == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+    void ALU::set(uint8_t &_value, const uint8_t _bit)
+    {
+        _value |= (1 << _bit);
+    }
+
+    void ALU::bit(Register8 &_dstRegister, const uint8_t _bit)
+    {
+        uint8_t data = _dstRegister.read();
+        bit(data, _bit);
+    }
+
+    void ALU::bit(uint8_t &_value, const uint8_t _bit)
+    {
+        bool isBitSet = (_value >> _bit) & 0x01;
+
+        isBitSet ? cpuPtr->resetFlag(CPUFlags::z) : cpuPtr->setFlag(CPUFlags::z);
         cpuPtr->resetFlag(CPUFlags::n);
-        cpuPtr->resetFlag(CPUFlags::h);
-        outBit == 0x0 ? cpuPtr->resetFlag(CPUFlags::c) : cpuPtr->setFlag(CPUFlags::c);
-    }
-
-    void ALU::subtractCarry(const Register8 &_srcRegister)
-    {
-        subtractCarry(_srcRegister.read());
-    }
-
-    void ALU::subtractCarry(const uint8_t _value)
-    {
-        uint8_t A = cpuPtr->AF.highByte().read();
-        bool cFlag = cpuPtr->readFlag(CPUFlags::c);
-
-        ((_value & 0x0F) + cFlag) > (A & 0x0F) ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
-        (_value + cFlag) > A ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
-        cpuPtr->setFlag(CPUFlags::n);
-
-        printf("\nBefore : %02X\n", cpuPtr->AF.highByte().read());
-        cpuPtr->AF.highByte() = A - _value - cFlag;
-        printf("After : %02X\n", cpuPtr->AF.highByte().read());
-
-        uint8_t result = cpuPtr->AF.highByte().read();
-
-        result == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->setFlag(CPUFlags::h);
     }
 }
