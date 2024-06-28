@@ -31,6 +31,7 @@ namespace gameboy
 
     class CPU {
         friend ALU;
+        friend InterruptHandler;
     public:
 
         CPU(GameBoy* _gb, MMU* _mmu, InterruptHandler* _interruptHandler);
