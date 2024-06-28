@@ -178,6 +178,12 @@ namespace gameboy
         printf("After : %02X\n", PC.read());
     }
 
+    void CPU::rst(const uint8_t vector)
+    {
+        mmuPtr->push(SP, PC);
+        PC = vector;
+    }
+
     void CPU::di() { interruptHandlerPtr->setIME(false); }
     void CPU::ei() { interruptHandlerPtr->setIME(true); }
 
@@ -1347,32 +1353,914 @@ namespace gameboy
         currentOpcode = mmuPtr->read8(PC++);
         switch (currentOpcode)
         {
+            case 0x00:
+                alu->rlc(BC.highByte());
+                break;
+            case 0x01:
+                alu->rlc(BC.lowByte());
+                break;
+            case 0x02:
+                alu->rlc(DE.highByte());
+                break;
+            case 0x03:
+                alu->rlc(DE.lowByte());
+                break;
+            case 0x04:
+                alu->rlc(HL.highByte());
+                break;
+            case 0x05:
+                alu->rlc(HL.lowByte());
+                break;
+            case 0x06:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->rlc(data);
+                mmuPtr->write8(address, data);
+                break;
+            }
+            case 0x07:
+                alu->rlc(AF.highByte());
+                break;
+            case 0x08:
+                alu->rrc(BC.highByte());
+                return;
+            case 0x09:
+                alu->rrc(BC.lowByte());
+                break;
+            case 0x0A:
+                alu->rrc(DE.highByte());
+                return;
+            case 0x0B:
+                alu->rrc(DE.lowByte());
+                return;
+            case 0x0C:
+                alu->rrc(HL.highByte());
+                return;
+            case 0x0D:
+                alu->rrc(HL.lowByte());
+                return;
+            case 0x0E: {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->rrc(data);
+                mmuPtr->write8(address, data);
+                break;
+            }
+            case 0x0F:
+                alu->rrc(AF.highByte());
+                return;
+
+            case 0x10:
+                alu->rl(BC.highByte());
+                break;
+            case 0x11:
+                alu->rl(BC.lowByte());
+                break;
+            case 0x12:
+                alu->rl(DE.highByte());
+                break;
+            case 0x13:
+                alu->rl(DE.lowByte());
+                break;
+            case 0x14:
+                alu->rl(HL.highByte());
+                break;
+            case 0x15:
+                alu->rl(HL.lowByte());
+                break;
+            case 0x16:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->rl(data);
+                mmuPtr->write8(address, data);
+                break;
+            }
+            case 0x17:
+                alu->rl(AF.highByte());
+                break;
+            case 0x18:
+                alu->rr(BC.highByte());
+                return;
             case 0x19:
                 alu->rr(BC.lowByte());
-                return;
+                break;
             case 0x1A:
                 alu->rr(DE.highByte());
                 return;
             case 0x1B:
                 alu->rr(DE.lowByte());
                 return;
+            case 0x1C:
+                alu->rr(HL.highByte());
+                return;
+            case 0x1D:
+                alu->rr(HL.lowByte());
+                return;
+            case 0x1E: {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->rr(data);
+                mmuPtr->write8(address, data);
+                break;
+            }
+            case 0x1F:
+                alu->rr(AF.highByte());
+                return;
+            case 0x20:
+                alu->sla(BC.highByte());
+                return;
+            case 0x21:
+                alu->sla(BC.lowByte());
+                return;
+            case 0x22:
+                alu->sla(DE.highByte());
+                return;
+            case 0x23:
+                alu->sla(DE.lowByte());
+                return;
+            case 0x24:
+                alu->sla(HL.highByte());
+                return;
+            case 0x25:
+                alu->sla(HL.lowByte());
+                return;
+            case 0x26:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->sla(data);
+                mmuPtr->write8(address, data);
+            }
+            case 0x27:
+                alu->sla(AF.highByte());
+                return;
+            case 0x28:
+                alu->sra(BC.highByte());
+                return;
+            case 0x29:
+                alu->sra(BC.lowByte());
+                return;
+            case 0x2A:
+                alu->sra(DE.highByte());
+                return;
+            case 0x2B:
+                alu->sra(DE.lowByte());
+                return;
+            case 0x2C:
+                alu->sra(HL.highByte());
+                return;
+            case 0x2D:
+                alu->sra(HL.lowByte());
+                return;
+            case 0x2E:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->sra(data);
+                mmuPtr->write8(address, data);
+            }
+            case 0x2F:
+                alu->sra(AF.highByte());
+                return;
+            case 0x30:
+                alu->swap(BC.highByte());
+                return;
+            case 0x31:
+                alu->swap(BC.lowByte());
+                return;
+            case 0x32:
+                alu->swap(DE.highByte());
+                return;
+            case 0x33:
+                alu->swap(DE.lowByte());
+                return;
+            case 0x34:
+                alu->swap(HL.highByte());
+                return;
+            case 0x35:
+                alu->swap(HL.lowByte());
+                return;
+            case 0x36:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->swap(data);
+                mmuPtr->write8(address, data);
+            }
             case 0x37:
                 alu->swap(AF.highByte());
                 return;
             case 0x38:
                 alu->srl(BC.highByte());
                 return;
+            case 0x39:
+                alu->srl(BC.lowByte());
+                return;
+            case 0x3A:
+                alu->srl(DE.highByte());
+                return;
+            case 0x3B:
+                alu->srl(DE.lowByte());
+                return;
+            case 0x3C:
+                alu->srl(HL.highByte());
+                return;
+            case 0x3D:
+                alu->srl(HL.lowByte());
+                return;
+            case 0x3E:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->srl(data);
+                mmuPtr->write8(address, data);
+            }
             case 0x3F:
                 alu->srl(AF.highByte());
+                return;
+            case 0x40:
+                alu->bit(BC.highByte(), 0);
+                return;
+            case 0x41:
+                alu->bit(BC.lowByte(), 0);
+                return;
+            case 0x42:
+                alu->bit(DE.highByte(), 0);
+                return;
+            case 0x43:
+                alu->bit(DE.lowByte(), 0);
+                return;
+            case 0x44:
+                alu->bit(HL.highByte(), 0);
+                return;
+            case 0x45:
+                alu->bit(HL.lowByte(), 0);
+                return;
+            case 0x46:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->bit(data, 0);
+            }
+            case 0x47:
+                alu->bit(AF.highByte(), 0);
+                return;
+            case 0x48:
+                alu->bit(BC.highByte(), 1);
+                return;
+            case 0x49:
+                alu->bit(BC.lowByte(), 1);
+                return;
+            case 0x4A:
+                alu->bit(DE.highByte(), 1);
+                return;
+            case 0x4B:
+                alu->bit(DE.lowByte(), 1);
+                return;
+            case 0x4C:
+                alu->bit(HL.highByte(), 1);
+                return;
+            case 0x4D:
+                alu->bit(HL.lowByte(), 1);
+                return;
+            case 0x4E:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->bit(data, 1);
+            }
+            case 0x4F:
+                alu->bit(AF.highByte(), 1);
+                return;
+
+            case 0x50:
+                alu->bit(BC.highByte(), 2);
+                return;
+            case 0x51:
+                alu->bit(BC.lowByte(), 2);
+                return;
+            case 0x52:
+                alu->bit(DE.highByte(), 2);
+                return;
+            case 0x53:
+                alu->bit(DE.lowByte(), 2);
+                return;
+            case 0x54:
+                alu->bit(HL.highByte(), 2);
+                return;
+            case 0x55:
+                alu->bit(HL.lowByte(), 2);
+                return;
+            case 0x56:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->bit(data, 2);
+            }
+            case 0x57:
+                alu->bit(AF.highByte(), 2);
+                return;
+            case 0x58:
+                alu->bit(BC.highByte(), 3);
+                return;
+            case 0x59:
+                alu->bit(BC.lowByte(), 3);
+                return;
+            case 0x5A:
+                alu->bit(DE.highByte(), 3);
+                return;
+            case 0x5B:
+                alu->bit(DE.lowByte(), 3);
+                return;
+            case 0x5C:
+                alu->bit(HL.highByte(), 3);
+                return;
+            case 0x5D:
+                alu->bit(HL.lowByte(), 3);
+                return;
+            case 0x5E:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->bit(data, 3);
+            }
+            case 0x5F:
+                alu->bit(AF.highByte(), 3);
+                return;
+
+
+            case 0x60:
+                alu->bit(BC.highByte(), 4);
+                return;
+            case 0x61:
+                alu->bit(BC.lowByte(), 4);
+                return;
+            case 0x62:
+                alu->bit(DE.highByte(), 4);
+                return;
+            case 0x63:
+                alu->bit(DE.lowByte(), 4);
+                return;
+            case 0x64:
+                alu->bit(HL.highByte(), 4);
+                return;
+            case 0x65:
+                alu->bit(HL.lowByte(), 4);
+                return;
+            case 0x66:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->bit(data, 4);
+            }
+            case 0x67:
+                alu->bit(AF.highByte(), 4);
+                return;
+            case 0x68:
+                alu->bit(BC.highByte(), 5);
+                return;
+            case 0x69:
+                alu->bit(BC.lowByte(), 5);
+                return;
+            case 0x6A:
+                alu->bit(DE.highByte(), 5);
+                return;
+            case 0x6B:
+                alu->bit(DE.lowByte(), 5);
+                return;
+            case 0x6C:
+                alu->bit(HL.highByte(), 5);
+                return;
+            case 0x6D:
+                alu->bit(HL.lowByte(), 5);
+                return;
+            case 0x6E:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->bit(data, 5);
+            }
+            case 0x6F:
+                alu->bit(AF.highByte(), 5);
+                return;
+
+            case 0x70:
+                alu->bit(BC.highByte(), 6);
+                return;
+            case 0x71:
+                alu->bit(BC.lowByte(), 6);
+                return;
+            case 0x72:
+                alu->bit(DE.highByte(), 6);
+                return;
+            case 0x73:
+                alu->bit(DE.lowByte(), 6);
+                return;
+            case 0x74:
+                alu->bit(HL.highByte(), 6);
+                return;
+            case 0x75:
+                alu->bit(HL.lowByte(), 6);
+                return;
+            case 0x76:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->bit(data, 6);
+            }
+            case 0x77:
+                alu->bit(AF.highByte(), 6);
+                return;
+            case 0x78:
+                alu->bit(BC.highByte(), 7);
+                return;
+            case 0x79:
+                alu->bit(BC.lowByte(), 7);
+                return;
+            case 0x7A:
+                alu->bit(DE.highByte(), 7);
+                return;
+            case 0x7B:
+                alu->bit(DE.lowByte(), 7);
+                return;
+            case 0x7C:
+                alu->bit(HL.highByte(), 7);
+                return;
+            case 0x7D:
+                alu->bit(HL.lowByte(), 7);
+                return;
+            case 0x7E:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->bit(data, 7);
+            }
+            case 0x7F:
+                alu->bit(AF.highByte(), 7);
+                return;
+
+
+            case 0x80:
+                alu->res(BC.highByte(), 0);
+                return;
+            case 0x81:
+                alu->res(BC.lowByte(), 0);
+                return;
+            case 0x82:
+                alu->res(DE.highByte(), 0);
+                return;
+            case 0x83:
+                alu->res(DE.lowByte(), 0);
+                return;
+            case 0x84:
+                alu->res(HL.highByte(), 0);
+                return;
+            case 0x85:
+                alu->res(HL.lowByte(), 0);
+                return;
+            case 0x86:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->res(data, 0);
+                mmuPtr->write8(address, data);
+            }
+            case 0x87:
+                alu->res(AF.highByte(), 0);
+                return;
+            case 0x88:
+                alu->res(BC.highByte(), 1);
+                return;
+            case 0x89:
+                alu->res(BC.lowByte(), 1);
+                return;
+            case 0x8A:
+                alu->res(DE.highByte(), 1);
+                return;
+            case 0x8B:
+                alu->res(DE.lowByte(), 1);
+                return;
+            case 0x8C:
+                alu->res(HL.highByte(), 1);
+                return;
+            case 0x8D:
+                alu->res(HL.lowByte(), 1);
+                return;
+            case 0x8E:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->res(data, 1);
+                mmuPtr->write8(address, data);
+            }
+            case 0x8F:
+                alu->res(AF.highByte(), 1);
+                return;
+
+
+            case 0x90:
+                alu->res(BC.highByte(), 2);
+                return;
+            case 0x91:
+                alu->res(BC.lowByte(), 2);
+                return;
+            case 0x92:
+                alu->res(DE.highByte(), 2);
+                return;
+            case 0x93:
+                alu->res(DE.lowByte(), 2);
+                return;
+            case 0x94:
+                alu->res(HL.highByte(), 2);
+                return;
+            case 0x95:
+                alu->res(HL.lowByte(), 2);
+                return;
+            case 0x96:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->res(data, 2);
+                mmuPtr->write8(address, data);
+            }
+            case 0x97:
+                alu->res(AF.highByte(), 2);
+                return;
+            case 0x98:
+                alu->res(BC.highByte(), 3);
+                return;
+            case 0x99:
+                alu->res(BC.lowByte(), 3);
+                return;
+            case 0x9A:
+                alu->res(DE.highByte(), 3);
+                return;
+            case 0x9B:
+                alu->res(DE.lowByte(), 3);
+                return;
+            case 0x9C:
+                alu->res(HL.highByte(), 3);
+                return;
+            case 0x9D:
+                alu->res(HL.lowByte(), 3);
+                return;
+            case 0x9E:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->res(data, 3);
+                mmuPtr->write8(address, data);
+            }
+            case 0x9F:
+                alu->res(AF.highByte(), 3);
+                return;
+
+
+            case 0xA0:
+                alu->res(BC.highByte(), 4);
+                return;
+            case 0xA1:
+                alu->res(BC.lowByte(), 4);
+                return;
+            case 0xA2:
+                alu->res(DE.highByte(), 4);
+                return;
+            case 0xA3:
+                alu->res(DE.lowByte(), 4);
+                return;
+            case 0xA4:
+                alu->res(HL.highByte(), 4);
+                return;
+            case 0xA5:
+                alu->res(HL.lowByte(), 4);
+                return;
+            case 0xA6:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->res(data, 4);
+                mmuPtr->write8(address, data);
+            }
+            case 0xA7:
+                alu->res(AF.highByte(), 4);
+                return;
+            case 0xA8:
+                alu->res(BC.highByte(), 5);
+                return;
+            case 0xA9:
+                alu->res(BC.lowByte(), 5);
+                return;
+            case 0xAA:
+                alu->res(DE.highByte(), 5);
+                return;
+            case 0xAB:
+                alu->res(DE.lowByte(), 5);
+                return;
+            case 0xAC:
+                alu->res(HL.highByte(), 5);
+                return;
+            case 0xAD:
+                alu->res(HL.lowByte(), 5);
+                return;
+            case 0xAE:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->res(data, 5);
+                mmuPtr->write8(address, data);
+            }
+            case 0xAF:
+                alu->res(AF.highByte(), 5);
+                return;
+            case 0xB0:
+                alu->res(BC.highByte(), 6);
+                return;
+            case 0xB1:
+                alu->res(BC.lowByte(), 6);
+                return;
+            case 0xB2:
+                alu->res(DE.highByte(), 6);
+                return;
+            case 0xB3:
+                alu->res(DE.lowByte(), 6);
+                return;
+            case 0xB4:
+                alu->res(HL.highByte(), 6);
+                return;
+            case 0xB5:
+                alu->res(HL.lowByte(), 6);
+                return;
+            case 0xB6:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->res(data, 6);
+                mmuPtr->write8(address, data);
+            }
+            case 0xB7:
+                alu->res(AF.highByte(), 6);
+                return;
+            case 0xB8:
+                alu->res(BC.highByte(), 7);
+                return;
+            case 0xB9:
+                alu->res(BC.lowByte(), 7);
+                return;
+            case 0xBA:
+                alu->res(DE.highByte(), 7);
+                return;
+            case 0xBB:
+                alu->res(DE.lowByte(), 7);
+                return;
+            case 0xBC:
+                alu->res(HL.highByte(), 7);
+                return;
+            case 0xBD:
+                alu->res(HL.lowByte(), 7);
+                return;
+            case 0xBE:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->res(data, 7);
+                mmuPtr->write8(address, data);
+            }
+            case 0xBF:
+                alu->res(AF.highByte(), 7);
+                return;
+
+            case 0xC0:
+                alu->set(BC.highByte(), 0);
+                return;
+            case 0xC1:
+                alu->set(BC.lowByte(), 0);
+                return;
+            case 0xC2:
+                alu->set(DE.highByte(), 0);
+                return;
+            case 0xC3:
+                alu->set(DE.lowByte(), 0);
+                return;
+            case 0xC4:
+                alu->set(HL.highByte(), 0);
+                return;
+            case 0xC5:
+                alu->set(HL.lowByte(), 0);
+                return;
+            case 0xC6:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->set(data, 0);
+                mmuPtr->write8(address, data);
+            }
+            case 0xC7:
+                alu->set(AF.highByte(), 0);
+                return;
+            case 0xC8:
+                alu->set(BC.highByte(), 1);
+                return;
+            case 0xC9:
+                alu->set(BC.lowByte(), 1);
+                return;
+            case 0xCA:
+                alu->set(DE.highByte(), 1);
+                return;
+            case 0xCB:
+                alu->set(DE.lowByte(), 1);
+                return;
+            case 0xCC:
+                alu->set(HL.highByte(), 1);
+                return;
+            case 0xCD:
+                alu->set(HL.lowByte(), 1);
+                return;
+            case 0xCE:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->set(data, 1);
+                mmuPtr->write8(address, data);
+            }
+            case 0xCF:
+                alu->set(AF.highByte(), 1);
+                return;
+
+
+            case 0xD0:
+                alu->set(BC.highByte(), 2);
+                return;
+            case 0xD1:
+                alu->set(BC.lowByte(), 2);
+                return;
+            case 0xD2:
+                alu->set(DE.highByte(), 2);
+                return;
+            case 0xD3:
+                alu->set(DE.lowByte(), 2);
+                return;
+            case 0xD4:
+                alu->set(HL.highByte(), 2);
+                return;
+            case 0xD5:
+                alu->set(HL.lowByte(), 2);
+                return;
+            case 0xD6:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->set(data, 2);
+                mmuPtr->write8(address, data);
+            }
+            case 0xD7:
+                alu->set(AF.highByte(), 2);
+                return;
+            case 0xD8:
+                alu->set(BC.highByte(), 3);
+                return;
+            case 0xD9:
+                alu->set(BC.lowByte(), 3);
+                return;
+            case 0xDA:
+                alu->set(DE.highByte(), 3);
+                return;
+            case 0xDB:
+                alu->set(DE.lowByte(), 3);
+                return;
+            case 0xDC:
+                alu->set(HL.highByte(), 3);
+                return;
+            case 0xDD:
+                alu->set(HL.lowByte(), 3);
+                return;
+            case 0xDE:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->set(data, 3);
+                mmuPtr->write8(address, data);
+            }
+            case 0xDF:
+                alu->set(AF.highByte(), 3);
+                return;
+
+
+            case 0xE0:
+                alu->set(BC.highByte(), 4);
+                return;
+            case 0xE1:
+                alu->set(BC.lowByte(), 4);
+                return;
+            case 0xE2:
+                alu->set(DE.highByte(), 4);
+                return;
+            case 0xE3:
+                alu->set(DE.lowByte(), 4);
+                return;
+            case 0xE4:
+                alu->set(HL.highByte(), 4);
+                return;
+            case 0xE5:
+                alu->set(HL.lowByte(), 4);
+                return;
+            case 0xE6:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->set(data, 4);
+                mmuPtr->write8(address, data);
+            }
+            case 0xE7:
+                alu->set(AF.highByte(), 4);
+                return;
+            case 0xE8:
+                alu->set(BC.highByte(), 5);
+                return;
+            case 0xE9:
+                alu->set(BC.lowByte(), 5);
+                return;
+            case 0xEA:
+                alu->set(DE.highByte(), 5);
+                return;
+            case 0xEB:
+                alu->set(DE.lowByte(), 5);
+                return;
+            case 0xEC:
+                alu->set(HL.highByte(), 5);
+                return;
+            case 0xED:
+                alu->set(HL.lowByte(), 5);
+                return;
+            case 0xEE:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->set(data, 5);
+                mmuPtr->write8(address, data);
+            }
+            case 0xEF:
+                alu->set(AF.highByte(), 5);
+                return;
+            case 0xF0:
+                alu->set(BC.highByte(), 6);
+                return;
+            case 0xF1:
+                alu->set(BC.lowByte(), 6);
+                return;
+            case 0xF2:
+                alu->set(DE.highByte(), 6);
+                return;
+            case 0xF3:
+                alu->set(DE.lowByte(), 6);
+                return;
+            case 0xF4:
+                alu->set(HL.highByte(), 6);
+                return;
+            case 0xF5:
+                alu->set(HL.lowByte(), 6);
+                return;
+            case 0xF6:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->set(data, 6);
+                mmuPtr->write8(address, data);
+            }
+            case 0xF7:
+                alu->set(AF.highByte(), 6);
+                return;
+            case 0xF8:
+                alu->set(BC.highByte(), 7);
+                return;
+            case 0xF9:
+                alu->set(BC.lowByte(), 7);
+                return;
+            case 0xFA:
+                alu->set(DE.highByte(), 7);
+                return;
+            case 0xFB:
+                alu->set(DE.lowByte(), 7);
+                return;
+            case 0xFC:
+                alu->set(HL.highByte(), 7);
+                return;
+            case 0xFD:
+                alu->set(HL.lowByte(), 7);
+                return;
+            case 0xFE:
+            {
+                uint16_t address = HL.read();
+                uint8_t data = mmuPtr->read8(address);
+                alu->set(data, 7);
+                mmuPtr->write8(address, data);
+            }
+            case 0xFF:
+                alu->set(AF.highByte(), 7);
                 return;
         }
         printf("%#02x -> INVALID INSTRUCTION!", currentOpcode);
         exit(-1);
-    }
-
-    void CPU::rst(const uint8_t vector)
-    {
-        mmuPtr->push(SP, PC);
-        PC = vector;
     }
 }
