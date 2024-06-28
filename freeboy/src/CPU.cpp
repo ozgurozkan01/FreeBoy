@@ -63,6 +63,11 @@ namespace gameboy
         {
             fetch();
             execute();
+
+            if (interruptHandlerPtr->getIME())
+            {
+                interruptHandlerPtr->handle(this, mmuPtr);
+            }
         }
     }
 
@@ -100,8 +105,6 @@ namespace gameboy
                SP.read(),
                currentInstruction->nmenomic.c_str());
 
-        if (gameBoyPtr->ticks > 0x177379)
-            exit(-1);
     }
 
     void CPU::execute()
@@ -186,7 +189,6 @@ namespace gameboy
 
     void CPU::di() { interruptHandlerPtr->setIME(false); }
     void CPU::ei() { interruptHandlerPtr->setIME(true); }
-
 
     void CPU::ret()
     {
