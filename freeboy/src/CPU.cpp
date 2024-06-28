@@ -100,8 +100,8 @@ namespace gameboy
                SP.read(),
                currentInstruction->nmenomic.c_str());
 
-/*        if (gameBoyPtr->ticks == 0xFD77AD)
-            exit(-1);*/
+        if (gameBoyPtr->ticks > 0x177379)
+            exit(-1);
     }
 
     void CPU::execute()
@@ -2259,8 +2259,10 @@ namespace gameboy
             case 0xFF:
                 alu->set(AF.highByte(), 7);
                 return;
+            default:
+                printf("%#02x -> INVALID INSTRUCTION!", currentOpcode);
+                exit(-1);
         }
-        printf("%#02x -> INVALID INSTRUCTION!", currentOpcode);
-        exit(-1);
+
     }
 }
