@@ -5,22 +5,24 @@
 #include "../include/GameBoy.h"
 #include "../include/InterruptHandler.h"
 #include "../include/Cartridge.h"
+#include "../include/Joypad.h"
+#include "../include/Timer.h"
 #include "../include/CPU.h"
 #include "../include/MMU.h"
 #include "../include/PPU.h"
-#include "../include/Renderer.h"
+#include "../include/IO.h"
 #include <cstdio>
 
 namespace gameboy
 {
     GameBoy::GameBoy(std::string _romPath) :
-    romPath(_romPath),
-    emulatorState(EmulatorState::running) {}
+            romPath(_romPath),
+            currentState(EmulatorState::running),
+            ticks(0)
+            {}
 
     bool GameBoy::init()
     {
-        interruptHandler = new InterruptHandler();
-
         cartridge = new Cartridge();
         if (!cartridge->load(romPath))
         {
@@ -28,40 +30,37 @@ namespace gameboy
             return false;
         }
 
-        renderer = new Renderer(cartridge->getTitle());
-
-        if (!renderer->init())
-        {
-            printf("ERROR : Renderer could not be created!\n");
-            return false;
-        }
-
-        ppu = new PPU();
-
-        mmu = new MMU(cartridge, interruptHandler, ppu);
-        if (!mmu->init())
-        {
-            printf("ERROR : CPU could not be initialized!");
-            return false;
-        }
-
+        interruptHandler = new InterruptHandler();
+        joypad = new Joypad(this);
+        timer = new Timer(interruptHandler);
+        ppu = new PPU(cartridge->getTitle());
+        io = new IO(joypad, timer, interruptHandler);
+        mmu = new MMU(cartridge, interruptHandler, ppu, io);
         cpu = new CPU(this, mmu, interruptHandler);
-        if (!cpu->init())
-        {
-            printf("ERROR : CPU could not be initialized!");
-            return false;
-        }
 
         return true;
     }
 
+    GameBoy::~GameBoy()
+    {
+        if (cpu != nullptr) { delete cpu; }
+        if (mmu != nullptr) { delete mmu; }
+        if (io != nullptr) { delete io; }
+        if (ppu != nullptr) { delete ppu; }
+        if (interruptHandler != nullptr) { delete interruptHandler; }
+        if (joypad != nullptr) { delete joypad; }
+        if (timer != nullptr) { delete timer; }
+        if (cartridge != nullptr) { delete cartridge; }
+    }
+
     void GameBoy::run()
     {
-        while (emulatorState != EmulatorState::quit)
+        while (currentState != EmulatorState::quit)
         {
-            renderer->render();
+            ppu->render();
             cpu->step();
             processEvent();
+
             ticks++;
         }
     }
@@ -72,30 +71,19 @@ namespace gameboy
 
         while(SDL_PollEvent(&event))
         {
-            switch (event.key.type)
-            {
-                case SDL_QUIT:
-                    emulatorState = EmulatorState::quit;
-                    break;
-                case SDL_KEYDOWN:
-                    switch (event.key.keysym.sym)
-                    {
-                        case SDLK_ESCAPE:
-                            emulatorState = EmulatorState::pause;
-                            break;
-                    }
-            }
+            joypad->buttonEvent(event);
         }
     }
 
-    GameBoy::~GameBoy()
+    void GameBoy::emulateCycles(uint8_t mCycle)
     {
-        if (cpu != nullptr) { delete cpu; }
-        if (cartridge != nullptr) { delete cartridge; }
-    }
-
-    void GameBoy::emulateCycles(uint8_t cycleCount)
-    {
-        // TODO : increment cycle
+        for (int mCounter = 0; mCounter < mCycle; ++mCounter)
+        {
+            for (int tCounter = 0; tCounter < 4; ++tCounter)
+            {
+                ticks++;
+                timer->tick();
+            }
+        }
     }
 }
