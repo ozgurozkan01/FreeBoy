@@ -18,8 +18,6 @@ namespace gameboy
     public:
         ALU(CPU* _cpu);
 
-        bool init();
-
         /* STANDARD INSTRUCTIONS */
         void increment(Register16& _srcRegister);
         void increment(Register8& _srcRegister);

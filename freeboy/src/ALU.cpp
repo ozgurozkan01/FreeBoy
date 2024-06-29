@@ -11,17 +11,6 @@ namespace gameboy
     ALU::ALU(CPU *_cpu) : cpuPtr(_cpu)
     {}
 
-    bool ALU::init()
-    {
-        if (cpuPtr == nullptr)
-        {
-            printf("ERROR : CPU Ref is NULL!");
-            return false;
-        }
-
-        return true;
-    }
-
     void ALU::or_(const Register8 &_srcRegister)
     {
         or_(_srcRegister.read());
