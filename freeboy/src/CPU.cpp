@@ -17,44 +17,15 @@ namespace gameboy
             interruptHandlerPtr(_interruptHandler),
             gameBoyPtr(_gb),
             mmuPtr(_mmu),
-            AF(0x0100),
-            BC(0), DE(0), HL(0),
-            SP(0), PC(0x0100)
+            AF(0x01B0),
+            BC(0x0013), DE(0x00D8), HL(0x014D),
+            SP(0xFFFE), PC(0x0100)
     {}
-
-    bool CPU::init()
-    {
-        if (interruptHandlerPtr == nullptr)
-        {
-            printf("ERROR : interruptHandlerPtr is NULL!\n");
-            return false;
-        }
-
-        if (gameBoyPtr == nullptr)
-        {
-            printf("ERROR : gameBoyPtr is NULL!\n");
-            return false;
-        }
-
-        if (mmuPtr == nullptr)
-        {
-            printf("ERROR : mmuPtr is NULL!\n");
-            return false;
-        }
-
-        alu = new ALU(this);
-        if (!alu->init())
-        {
-            printf("ERROR : alu is NULL!\n");
-            return false;
-        }
-
-        return true;
-    }
 
     CPU::~CPU()
     {
         if (cpuProcess != nullptr) { delete cpuProcess; }
+        if (alu != nullptr) { delete alu; }
     }
 
     void CPU::step()
@@ -66,7 +37,7 @@ namespace gameboy
 
             if (interruptHandlerPtr->getIME())
             {
-                interruptHandlerPtr->handle(this, mmuPtr);
+                interruptHandlerPtr->requestInterrupt(this, mmuPtr);
             }
         }
     }
@@ -76,11 +47,6 @@ namespace gameboy
         currentOpcode = mmuPtr->read8(PC++);
         currentInstruction = &cpuProcess->standardInstructions[currentOpcode];
 
-
-        if (currentOpcode == 0xCB)
-        {
-
-        }
         printf("\n");
 
         char flags[16];

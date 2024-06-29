@@ -39,8 +39,6 @@ namespace gameboy
         void step();
         void emulateCycles(uint8_t cycleCount);
 
-        bool init();
-
     private:
         uint8_t currentOpcode{};
 
