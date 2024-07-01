@@ -2,6 +2,7 @@
 // Created by ozgur on 12/04/2024.
 //
 
+#include <thread>
 #include "../include/CPU.h"
 #include "../include/GameBoy.h"
 #include "../include/MMU.h"
@@ -20,7 +21,9 @@ namespace gameboy
             AF(0x01B0),
             BC(0x0013), DE(0x00D8), HL(0x014D),
             SP(0xFFFE), PC(0x0100)
-    {}
+    {
+        alu = new ALU(this);
+    }
 
     CPU::~CPU()
     {
@@ -34,11 +37,16 @@ namespace gameboy
         {
             fetch();
             execute();
+        }
 
-            if (interruptHandlerPtr->getIME())
-            {
-                interruptHandlerPtr->requestInterrupt(this, mmuPtr);
-            }
+        else if (interruptHandlerPtr->getIF().read())
+        {
+            isHalted = false;
+        }
+
+        if (interruptHandlerPtr->getIME())
+        {
+            interruptHandlerPtr->requestInterrupt(this, mmuPtr);
         }
     }
 
@@ -46,7 +54,6 @@ namespace gameboy
     {
         currentOpcode = mmuPtr->read8(PC++);
         currentInstruction = &cpuProcess->standardInstructions[currentOpcode];
-
         printf("\n");
 
         char flags[16];
@@ -70,11 +77,12 @@ namespace gameboy
                HL.read(),
                SP.read(),
                currentInstruction->nmenomic.c_str());
-
     }
 
     void CPU::execute()
     {
+        emulateCycles(currentInstruction->mCycles);
+
         if (currentOpcode != 0xCB)  { decodeStandardInstructions(); }
         else                        { decodeExtendedInstructions(); }
     }
@@ -83,33 +91,33 @@ namespace gameboy
 
     void CPU::load(Register16 &_register, const uint16_t _value)
     {
-        printf("\nBefore : %02X\n", _register.read());
+        //printf("\nBefore : %02X\n", _register.read());
         _register = _value;
-        printf("After : %02X\n", _register.read());
+        //printf("After : %02X\n", _register.read());
     }
     void CPU::load(const uint16_t _address, const Register8 &_register)
     {
-        printf("\nBefore : %02X\n", mmuPtr->read8(_address));
+        //printf("\nBefore : %02X\n", mmuPtr->read8(_address));
         mmuPtr->write8(_address, _register.read());
-        printf("After : %02X\n", mmuPtr->read8(_address));
+        //printf("After : %02X\n", mmuPtr->read8(_address));
     }
     void CPU::load(Register8 &_register, const uint8_t _value)
     {
-        printf("\nBefore : %02X\n", _register.read());
+        //printf("\nBefore : %02X\n", _register.read());
         _register = _value;
-        printf("After : %02X\n", _register.read());
+        //printf("After : %02X\n", _register.read());
     }
     void CPU::load(Register8 &_dstRegister, const Register8 &_srcRegister)
     {
-        printf("\nBefore : %02X\n", _dstRegister.read());
+        //printf("\nBefore : %02X\n", _dstRegister.read());
         _dstRegister = _srcRegister;
-        printf("After : %02X\n", _dstRegister.read());
+        //printf("After : %02X\n", _dstRegister.read());
     }
     void CPU::load(const uint16_t _address, const uint16_t _value)
     {
-        printf("\nBefore : %02X\n", mmuPtr->read16(_address));
+        //printf("\nBefore : %02X\n", mmuPtr->read16(_address));
         mmuPtr->write16(_address, _value);
-        printf("After : %02X\n", mmuPtr->read16(_address));
+        //printf("After : %02X\n", mmuPtr->read16(_address));
     }
 
     void CPU::setFlag(const CPUFlags _flag) { AF.lowByte() |= (1 << static_cast<uint8_t>(_flag)); }
@@ -120,31 +128,31 @@ namespace gameboy
 
     void CPU::jump(const uint16_t _value)
     {
-        printf("\nBefore : %02X\n", PC.read());
+        //printf("\nBefore : %02X\n", PC.read());
         PC = _value;
-        printf("After : %02X\n", PC.read());
+        //printf("After : %02X\n", PC.read());
     }
 
     void CPU::jump(const Register16 &_register)
     {
-        printf("\nBefore : %02X\n", PC.read());
+        //printf("\nBefore : %02X\n", PC.read());
         PC = _register;
-        printf("After : %02X\n", PC.read());
+        //printf("After : %02X\n", PC.read());
     }
 
     void CPU::relativeJump(const uint16_t _data)
     {
-        printf("\nBefore : %02X\n", PC.read());
+        //printf("\nBefore : %02X\n", PC.read());
         PC = PC.read() + _data;
-        printf("After : %02X\n", PC.read());
+        //printf("After : %02X\n", PC.read());
     }
 
     void CPU::call(const uint16_t _value)
     {
-        printf("\nBefore : %02X\n", PC.read());
+        //printf("\nBefore : %02X\n", PC.read());
         mmuPtr->push(SP, PC);
         PC = _value;
-        printf("After : %02X\n", PC.read());
+        //printf("After : %02X\n", PC.read());
     }
 
     void CPU::rst(const uint8_t vector)
@@ -158,9 +166,9 @@ namespace gameboy
 
     void CPU::ret()
     {
-        printf("\nBefore : %02X\n", PC.read());
+        //printf("\nBefore : %02X\n", PC.read());
         PC = mmuPtr->pop(SP);
-        printf("After : %02X\n", PC.read());
+        //printf("After : %02X\n", PC.read());
     }
 
     void CPU::reti()
@@ -169,7 +177,7 @@ namespace gameboy
         ei();
     }
 
-    void CPU::halt() { printf("NOT IMPLEMENTED YET\n"); exit(-1); }
+    void CPU::halt() { isHalted = true; }
 
     void CPU::decodeStandardInstructions()
     {
@@ -316,11 +324,12 @@ namespace gameboy
                 if (!checkFlag(CPUFlags::z))
                 {
                     relativeJump(e8);
+                    emulateCycles(1);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             }
             case 0x21: // LD HL,n16 - 3/12t
@@ -361,11 +370,12 @@ namespace gameboy
                 if (checkFlag(CPUFlags::z))
                 {
                     relativeJump(e8);
+                    emulateCycles(1);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             }
             case 0x29:
@@ -402,11 +412,12 @@ namespace gameboy
                 if (!checkFlag(CPUFlags::c))
                 {
                     relativeJump(e8);
+                    emulateCycles(1);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             }
             case 0x31: // LD SP, n16 - 3/12t
@@ -447,17 +458,25 @@ namespace gameboy
                 load(address, n8);
                 return;
             }
+            case 0x37:
+            {
+                setFlag(CPUFlags::c);
+                resetFlag(CPUFlags::h);
+                resetFlag(CPUFlags::n);
+                return;
+            }
             case 0x38:
             {
                 int8_t e8 = static_cast<int8_t>(mmuPtr->read8(PC++));
                 if (checkFlag(CPUFlags::c))
                 {
                     relativeJump(e8);
+                    emulateCycles(1);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             }
             case 0x39:
@@ -949,10 +968,21 @@ namespace gameboy
             case 0xBF:
                 alu->compare(AF.highByte());
                 return;
+            case 0xC0:
+                if (!checkFlag(CPUFlags::z))
+                {
+                    ret();
+                    emulateCycles(3);
+                }
+/*                else
+                {
+                    printf("\nCONDITION IS FALSE!!!!!!\n");
+                }*/
+                return;
             case 0xC1:
-                printf("\nBefore : %02X\n", BC.read());
+                //printf("\nBefore : %02X\n", BC.read());
                 BC = mmuPtr->pop(SP);
-                printf("After : %02X\n", BC.read());
+                //printf("After : %02X\n", BC.read());
                 return;
             case 0xC2:
             {
@@ -962,11 +992,12 @@ namespace gameboy
                 if (!checkFlag(CPUFlags::z))
                 {
                     jump(a16);
+                    emulateCycles(1);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             }
             case 0xC3: // JP a16 - 3/16t
@@ -985,15 +1016,16 @@ namespace gameboy
                 if (!checkFlag(CPUFlags::z))
                 {
                     call(a16);
+                    emulateCycles(3);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             }
             case 0xC5:
-                printf("\nBC : %02x\n", BC.read());
+                //printf("\nBC : %02x\n", BC.read());
                 mmuPtr->push(SP, BC);
                 return;
             case 0xC6:
@@ -1009,11 +1041,12 @@ namespace gameboy
                 if (checkFlag(CPUFlags::z))
                 {
                     ret();
+                    emulateCycles(3);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             case 0xC9: // RET - 1/16t
                 ret();
@@ -1026,11 +1059,12 @@ namespace gameboy
                 if (checkFlag(CPUFlags::z))
                 {
                     jump(a16);
+                    emulateCycles(1);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             }
             case 0xCC:
@@ -1041,11 +1075,12 @@ namespace gameboy
                 if (checkFlag(CPUFlags::z))
                 {
                     call(a16);
+                    emulateCycles(3);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             }
             case 0xCD: // CALL a16 - 3/24t
@@ -1069,16 +1104,17 @@ namespace gameboy
                 if (!checkFlag(CPUFlags::c))
                 {
                     ret();
+                    emulateCycles(3);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             case 0xD1:
-                printf("\nBefore : %02X\n", DE.read());
+                //printf("\nBefore : %02X\n", DE.read());
                 DE = mmuPtr->pop(SP);
-                printf("After : %02X\n", DE.read());
+                //printf("After : %02X\n", DE.read());
                 return;
             case 0xD2:
             {
@@ -1088,11 +1124,12 @@ namespace gameboy
                 if (!checkFlag(CPUFlags::c))
                 {
                     jump(a16);
+                    emulateCycles(1);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             }
             case 0xD4:
@@ -1103,15 +1140,16 @@ namespace gameboy
                 if (!checkFlag(CPUFlags::c))
                 {
                     call(a16);
+                    emulateCycles(3);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             }
             case 0xD5:
-                printf("\nDE : %02x\n", DE.read());
+                //printf("\nDE : %02x\n", DE.read());
                 mmuPtr->push(SP, DE);
                 return;
             case 0xD6:
@@ -1127,11 +1165,12 @@ namespace gameboy
                 if (checkFlag(CPUFlags::c))
                 {
                     ret();
+                    emulateCycles(3);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             case 0xD9:
                 reti();
@@ -1144,11 +1183,12 @@ namespace gameboy
                 if (checkFlag(CPUFlags::c))
                 {
                     jump(a16);
+                    emulateCycles(1);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             }
             case 0xDC:
@@ -1159,11 +1199,12 @@ namespace gameboy
                 if (checkFlag(CPUFlags::c))
                 {
                     call(a16);
+                    emulateCycles(3);
                 }
-                else
+/*                else
                 {
                     printf("\nCONDITION IS FALSE!!!!!!\n");
-                }
+                }*/
                 return;
             }
             case 0xDE:
@@ -1179,14 +1220,14 @@ namespace gameboy
             {
                 uint8_t a8 = mmuPtr->read8(PC++);
                 uint16_t address = 0xFF00 | a8;
-                printf("\nFF00 | DATA : %02X -- A: %02x\n", address, AF.highByte().read());
+                //printf("\nFF00 | DATA : %02X -- A: %02x\n", address, AF.highByte().read());
                 load(address, AF.highByte());
                 return;
             }
             case 0xE1: // POP HL
-                printf("\nBefore : %02X\n", HL.read());
+                //printf("\nBefore : %02X\n", HL.read());
                 HL = mmuPtr->pop(SP);
-                printf("After : %02X\n", HL.read());
+                //printf("After : %02X\n", HL.read());
                 return;
             case 0xE2:
             {
@@ -1196,7 +1237,7 @@ namespace gameboy
                 return;
             }
             case 0xE5: // PUSH HL
-                printf("\nHL : %02x\n", HL.read());
+                //printf("\nHL : %02x\n", HL.read());
                 mmuPtr->push(SP, HL);
                 return;
             case 0xE6:
@@ -1243,9 +1284,9 @@ namespace gameboy
                 return;
             }
             case 0xF1:
-                printf("\nBefore : %02X\n", AF.read());
+                //printf("\nBefore : %02X\n", AF.read());
                 AF = mmuPtr->pop(SP) & 0xFFF0;
-                printf("After : %02X\n", AF.read());
+                //printf("After : %02X\n", AF.read());
                 return;
             case 0xF2:
             {
@@ -1259,7 +1300,7 @@ namespace gameboy
                 di();
                 return;
             case 0xF5: // PUSH AF
-                printf("\nAF : %02x\n", AF.read());
+                //printf("\nAF : %02x\n", AF.read());
                 mmuPtr->push(SP, AF);
                 return;
             case 0xF6:
@@ -1276,9 +1317,9 @@ namespace gameboy
                 uint16_t e8 = mmuPtr->read8(PC++);
                 uint16_t sp_e8 = SP.read() + static_cast<int8_t>(e8);
 
-                printf("\nSP+e8 : %04x\n", (SP.read() & 0x0F) + (e8 & 0x0F));
+                //printf("\nSP+e8 : %04x\n", (SP.read() & 0x0F) + (e8 & 0x0F));
                 (SP.read() & 0x0F) + (e8 & 0x0F) > 0x0F ? setFlag(CPUFlags::h): resetFlag(CPUFlags::h);
-                printf("\nSP+e8 : %04x\n", (SP.read() & 0xFF) + (e8 & 0xFF));
+                //printf("\nSP+e8 : %04x\n", (SP.read() & 0xFF) + (e8 & 0xFF));
                 (SP.read() & 0xFF) + (e8 & 0xFF) > 0xFF ? setFlag(CPUFlags::c): resetFlag(CPUFlags::c);
 
                 load(HL, sp_e8);
@@ -1312,6 +1353,7 @@ namespace gameboy
                 rst(0x38);
                 return;
             default:
+                printf("UNSUPPORTED INSTRUCTION : %#02x\n", currentOpcode);
                 exit(-1);
         }
     }
@@ -2231,6 +2273,13 @@ namespace gameboy
                 printf("%#02x -> INVALID INSTRUCTION!", currentOpcode);
                 exit(-1);
         }
+    }
 
+    void CPU::run()
+    {
+        while (gameBoyPtr->currentState == EmulatorState::running)
+        {
+            step();
+        }
     }
 }
