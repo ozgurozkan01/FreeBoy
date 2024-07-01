@@ -36,7 +36,7 @@ namespace gameboy
 
         CPU(GameBoy* _gb, MMU* _mmu, InterruptHandler* _interruptHandler);
         ~CPU();
-        void step();
+        void run();
         void emulateCycles(uint8_t cycleCount);
 
     private:
@@ -51,22 +51,21 @@ namespace gameboy
         ALU* alu;
 
         /* Acuumulator and Flags */
-        Register16 AF;
+        Register16 af;
         /* General Purpose Registers */
-        Register16 BC;
-        Register16 DE;
-        Register16 HL;
-        /* Stack Pointer */
-        // Register16 SP;
-        /* Program Counter */
-        Register16 PC;
-        Register16 SP;
+        Register16 bc;
+        Register16 de;
+        Register16 hl;
+
+        Register16 pc; /* Program Counter */
+        Register16 sp; /* Stack Pointer */
 
         bool isStopped{};
         bool isHalted{};
 
         void fetch();
         void execute();
+        void step();
 
         void decodeStandardInstructions();
         void decodeExtendedInstructions();
