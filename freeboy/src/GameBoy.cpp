@@ -5,13 +5,16 @@
 #include "../include/GameBoy.h"
 #include "../include/InterruptHandler.h"
 #include "../include/Cartridge.h"
+#include "../include/Renderer.h"
 #include "../include/Joypad.h"
 #include "../include/Timer.h"
 #include "../include/CPU.h"
 #include "../include/MMU.h"
 #include "../include/PPU.h"
+#include "../include/DMA.h"
 #include "../include/IO.h"
 #include <cstdio>
+#include <thread>
 
 namespace gameboy
 {
@@ -30,39 +33,36 @@ namespace gameboy
             return false;
         }
 
+        mmu = new MMU(this);
+        ppu = new PPU();
+        renderer = new Renderer(cartridge->getTitle(), mmu);
+        if (!renderer->init())
+        {
+            printf("ERROR : SDL Window could not be created!\n");
+            return false;
+        }
+
         interruptHandler = new InterruptHandler();
         joypad = new Joypad(this);
         timer = new Timer(interruptHandler);
-        ppu = new PPU(cartridge->getTitle());
-        io = new IO(joypad, timer, interruptHandler);
-        mmu = new MMU(cartridge, interruptHandler, ppu, io);
+        dma = new DMA(ppu, mmu);
+        io = new IO(joypad, timer, interruptHandler, dma);
         cpu = new CPU(this, mmu, interruptHandler);
 
         return true;
     }
 
-    GameBoy::~GameBoy()
-    {
-        if (cpu != nullptr) { delete cpu; }
-        if (mmu != nullptr) { delete mmu; }
-        if (io != nullptr) { delete io; }
-        if (ppu != nullptr) { delete ppu; }
-        if (interruptHandler != nullptr) { delete interruptHandler; }
-        if (joypad != nullptr) { delete joypad; }
-        if (timer != nullptr) { delete timer; }
-        if (cartridge != nullptr) { delete cartridge; }
-    }
-
     void GameBoy::run()
     {
+        std::thread cpuThread(&CPU::run, cpu);
+
         while (currentState != EmulatorState::quit)
         {
-            ppu->render();
-            cpu->step();
             processEvent();
-
-            ticks++;
+            renderer->renderDebugger();
         }
+
+        if (cpuThread.joinable()) { cpuThread.join(); }
     }
 
     void GameBoy::processEvent()
@@ -84,6 +84,19 @@ namespace gameboy
                 ticks++;
                 timer->tick();
             }
+            dma->tick();
         }
+    }
+
+    GameBoy::~GameBoy()
+    {
+        if (cpu) { delete cpu; }
+        if (mmu) { delete mmu; }
+        if (io)  { delete io; }
+        if (ppu) { delete ppu; }
+        if (interruptHandler) { delete interruptHandler; }
+        if (joypad) { delete joypad; }
+        if (timer)  { delete timer; }
+        if (cartridge) { delete cartridge; }
     }
 }
