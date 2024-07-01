@@ -26,8 +26,8 @@ namespace gameboy
 
     void InterruptHandler::trigger(CPU* _cpu, MMU* _mmu, const uint16_t _address ,const InterruptType _type)
     {
-        _mmu->push(_cpu->SP, _cpu->PC);
-        _cpu->PC = _address;
+        _mmu->push(_cpu->sp, _cpu->pc);
+        _cpu->pc = _address;
         _cpu->isHalted = false;
         IF = ~(static_cast<uint8_t>(_type));
         IME = false;
