@@ -25,9 +25,11 @@ namespace gameboy
         else if (_address == 0xFF05) { tima = _value; }
         else if (_address == 0xFF06) { tma = _value; }
         else if (_address == 0xFF07) { tac = _value; }
-
-        printf("INVALID MEMORY ADDRESS: %#02x", _address);
-        exit(-1);
+        else
+        {
+            printf("INVALID MEMORY ADDRESS: %#02x", _address);
+            exit(-1);
+        }
     }
 
     uint8_t Timer::read(uint16_t _address)
@@ -36,9 +38,11 @@ namespace gameboy
         else if (_address == 0xFF05) { return tima.read(); }
         else if (_address == 0xFF06) { return tma.read(); }
         else if (_address == 0xFF07) { return tac.read(); }
-
-        printf("INVALID MEMORY ADDRESS: %#02x", _address);
-        exit(-1);
+        else
+        {
+            printf("INVALID MEMORY ADDRESS: %#02x", _address);
+            exit(-1);
+        }
     }
 
     void Timer::tick()
