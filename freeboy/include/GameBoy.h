@@ -13,11 +13,13 @@ namespace gameboy
 {
     class InterruptHandler;
     class Cartridge;
+    class Renderer;
     class Joypad;
     class Timer;
     class CPU;
     class PPU;
     class MMU;
+    class DMA;
     class IO;
 
     enum class EmulatorState : uint8_t
@@ -30,6 +32,7 @@ namespace gameboy
     class GameBoy {
         friend class CPU;
         friend class Joypad;
+        friend class MMU;
     public:
         GameBoy(std::string _romPath);
         ~GameBoy();
@@ -43,11 +46,13 @@ namespace gameboy
 
         InterruptHandler* interruptHandler;
         Cartridge* cartridge;
+        Renderer* renderer;
         Joypad* joypad;
         Timer* timer;
         CPU* cpu;
         MMU* mmu;
         PPU* ppu;
+        DMA* dma;
         IO* io;
 
         uint64_t ticks;
