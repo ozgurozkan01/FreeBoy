@@ -3,57 +3,36 @@
 //
 
 #include "../include/MMU.h"
+#include "../include/GameBoy.h"
 #include "../include/Cartridge.h"
 #include "../include/InterruptHandler.h"
 #include "../include/IO.h"
 #include "../include/PPU.h"
+#include "../include/DMA.h"
 #include <cstdio>
 
 namespace gameboy
 {
-    MMU::MMU(Cartridge *_cartridge, InterruptHandler* _interruptHandler, PPU* _ppu) :
-            cartridgePtr(_cartridge),
-            interruptHandlerPtr(_interruptHandler),
-            ppuPtr(_ppu)
+    MMU::MMU(GameBoy* _gameBoy) :
+        gameBoyPtr(_gameBoy)
     {}
-
-    bool MMU::init()
-    {
-        if (cartridgePtr == nullptr)
-        {
-            printf("ERROR : cartridgePtr could not be initialized!");
-            return false;
-        }
-
-        if (interruptHandlerPtr == nullptr)
-        {
-            printf("ERROR : interruptHandlerPtr could not be initialized!");
-            return false;
-        }
-
-        if (ppuPtr == nullptr)
-        {
-            printf("ERROR : ppuPtr could not be initialized!");
-            return false;
-        }
-        return true;
-    }
 
     void MMU::write8(const uint16_t _address, const uint8_t _value)
     {
         if (_address < 0x8000)
         {
-            cartridgePtr->write(_address, _value);
+            gameBoyPtr->cartridge->write(_address, _value);
             return;
         }
         else if (_address < 0xA000)
         {
-            ppuPtr->writeVRAM(_address, _value);
+            gameBoyPtr->ppu->writeVRAM(_address, _value);
             return;
         }
         else if (_address < 0xC000)
         {
-            cartridgePtr->write(_address, _value);
+            gameBoyPtr->cartridge->write(_address, _value);
+            return;
         }
         else if (_address < 0xE000)
         {
@@ -62,19 +41,21 @@ namespace gameboy
         }
         else if (_address < 0xFE00)
         {
-            printf(" (W-Echo RAM) ");
+            printf(" (W-Echo RAM) "); return;
         }
         else if (_address < 0xFEA0)
         {
-            printf(" (W-OAM RAM) ");
+            if (gameBoyPtr->dma->isTransferring()) { return; }
+            gameBoyPtr->ppu->writeOAM(_address, _value);
+            return;
         }
         else if (_address < 0xFF00)
         {
-            printf(" (W-Not Usable Memory) ");
+            printf(" (W-Not Usable Memory) "); return;
         }
         else if (_address < 0xFF80)
         {
-            ioHandler->write(_address, _value);
+            gameBoyPtr->io->write(_address, _value);
             return;
         }
         else if (_address < 0xFFFF)
@@ -84,26 +65,26 @@ namespace gameboy
         }
         else if (_address == 0xFFFF)
         {
-            interruptHandlerPtr->setIE(_value);
+            gameBoyPtr->interruptHandler->setIE(_value);
             return;
         }
 
-        printf("\nUNSUPPORTED MEMORY ADDRESS %02X\n", _address);
+        printf("\nUNSUPPORTED MEMORY WRITE %02X\n", _address);
         exit(-1);
     }
     uint8_t MMU::read8(const uint16_t _address)
     {
         if (_address < 0x8000)
         {
-            return cartridgePtr->read(_address);
+            return gameBoyPtr->cartridge->read(_address);
         }
         else if (_address < 0xA000)
         {
-            return ppuPtr->readVRAM(_address);
+            return gameBoyPtr->ppu->readVRAM(_address);
         }
         else if (_address < 0xC000)
         {
-            return cartridgePtr->read(_address);
+            return gameBoyPtr->cartridge->read(_address);
         }
         else if (_address < 0xE000)
         {
@@ -111,19 +92,23 @@ namespace gameboy
         }
         else if (_address < 0xFE00)
         {
-            printf(" (W-Echo RAM) ");
+            printf(" (R-Echo RAM) ");
+            return 0x0;
         }
         else if (_address < 0xFEA0)
         {
-            printf(" (W-OAM RAM) ");
+            if (gameBoyPtr->dma->isTransferring()) { return 0xFF; }
+
+            return gameBoyPtr->ppu->readOAM(_address);
         }
         else if (_address < 0xFF00)
         {
-            printf(" (W-Not Usable Memory) ");
+            printf(" (R-Not Usable Memory) ");
+            return 0x0;
         }
         else if (_address < 0xFF80)
         {
-            return ioHandler->read(_address);
+            return gameBoyPtr->io->read(_address);
         }
         else if (_address < 0xFFFF)
         {
@@ -131,10 +116,10 @@ namespace gameboy
         }
         else if (_address == 0xFFFF)
         {
-            return interruptHandlerPtr->getIE();
+            return gameBoyPtr->interruptHandler->getIE().read();
         }
 
-        printf("\nUNSUPPORTED MEMORY ADDRESS %02X\n", _address);
+        printf("\nUNSUPPORTED MEMORY READ %02X\n", _address);
         exit(-1);
     }
 

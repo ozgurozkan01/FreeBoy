@@ -11,18 +11,12 @@
 
 namespace gameboy
 {
-    class Cartridge;
-    class InterruptHandler;
-    class PPU;
-    class IO;
-
+    class GameBoy;
     using namespace cpu_register;
 
     class MMU{
     public:
-        MMU(Cartridge* _cartridge, InterruptHandler* _interruptHandler, PPU* _ppu);
-
-        bool init();
+        MMU(GameBoy* _gameBoy);
 
         void write8(const uint16_t _address, const uint8_t _value);
         uint8_t read8(const uint16_t _address);
@@ -34,16 +28,10 @@ namespace gameboy
         uint16_t pop(Register16& _sp);
 
     private:
-        Cartridge* cartridgePtr;
-        InterruptHandler* interruptHandlerPtr;
-        PPU* ppuPtr;
-        IO* ioHandler;
+        GameBoy* gameBoyPtr;
 
-        /* RAM */
         std::array<uint8_t, 0x2000> workRAM = {0};
-        // std::array<uint8_t, 0x2000> videoRAM;
         std::array<uint8_t, 0x80> highRAM = {0};
-        // std::array<uint8_t, 0xA0> oamRAM;
     };
 }
 
