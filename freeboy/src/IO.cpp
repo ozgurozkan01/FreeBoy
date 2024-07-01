@@ -3,43 +3,46 @@
 //
 
 #include "../include/IO.h"
-#include <cstdio>
+#include "../include/InterruptHandler.h"
+#include "../include/Joypad.h"
+#include "../include/Timer.h"
+#include "../include/DMA.h"
 
 namespace gameboy
 {
+    IO::IO(Joypad *_joypad, Timer* _timer, InterruptHandler* _interruptHandler, DMA* _dma) :
+    interruptHandlerPtr(_interruptHandler),
+    joypadPtr(_joypad),
+    timerPtr(_timer),
+    dma(_dma),
+    sb(0x0),
+    sc(0x7E)
+    {}
+
     uint8_t IO::read(const uint16_t _address)
     {
         if (_address == 0xFF00)
         {
-            // JOYPAD INPUT
+            return joypadPtr->read();
         }
-        else if (_address < 0xFF03)
+        else if (_address == 0xFF01)
         {
-            // Serial Transfer
+            return sb;
+        }
+        else if (_address == 0xFF02)
+        {
+            return sc;
         }
         else if (_address >= 0xFF04 && _address <= 0xFF07)
         {
-            // Timer and Divider
+            return timerPtr->read(_address);
         }
         else if (_address == 0xFF0F)
         {
-            // Interrupts
+            return interruptHandlerPtr->getIF().read();
         }
-        else if (_address <= 0xFF26)
-        {
-            // AUDIO
-        }
-        else if (_address >= 0xFF30 && _address <= 0xFF3F)
-        {
-            // Wave Pattern
-        }
-        else if (_address >= 0xFF40 && _address <= 0xFF4B)
-        {
-            // LCD Control, Status, Position, Scrolling and Palettes
-        }
-        else if (_address == 0xFF50)
-        {
-            // Set to non-zero to disable boot ROM
+        if (_address == 0xFF44) {
+            return ly++;
         }
         return 0xFF;
     }
@@ -48,35 +51,33 @@ namespace gameboy
     {
         if (_address == 0xFF00)
         {
-            // JOYPAD INPUT
+            joypadPtr->write(_value);
+            return;
         }
-        else if (_address < 0xFF03)
+        else if (_address == 0xFF01)
         {
-            // Serial Transfer
+            sb = _value;
+            return;
+        }
+        else if (_address == 0xFF02)
+        {
+            sc = _value;
+            return;
         }
         else if (_address >= 0xFF04 && _address <= 0xFF07)
         {
-            // Timer and Divider
+            timerPtr->write(_address, _value);
+            return;
         }
         else if (_address == 0xFF0F)
         {
-            // Interrupts
+            interruptHandlerPtr->setIF(_value);
+            return;
         }
-        else if (_address <= 0xFF26)
+        else if (_address == 0xFF46)
         {
-            // AUDIO
-        }
-        else if (_address >= 0xFF30 && _address <= 0xFF3F)
-        {
-            // Wave Pattern
-        }
-        else if (_address >= 0xFF40 && _address <= 0xFF4B)
-        {
-            // LCD Control, Status, Position, Scrolling and Palettes
-        }
-        else if (_address == 0xFF50)
-        {
-            // Set to non-zero to disable boot ROM
+            dma->init(_value);
+            return;
         }
     }
 }
