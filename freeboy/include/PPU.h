@@ -10,12 +10,28 @@
 
 namespace gameboy
 {
+    struct OAM
+    {
+        uint8_t y;
+        uint8_t x;
+        uint8_t tileIndex;
+        uint8_t attributes;
+    };
+
     class PPU {
     public:
+        PPU() = default;
+
         void writeVRAM(const uint16_t _address, const uint8_t _value);
         uint8_t readVRAM(const uint16_t _address);
+
+        void writeOAM(const uint16_t _address, const uint8_t _value);
+        uint8_t readOAM(const uint16_t _address);
     private:
+
+
         std::array<uint8_t, 0x2000> videoRAM = {0};
+        std::array<OAM, 0x28> oamRAM = {0};
     };
 }
 
