@@ -25,7 +25,10 @@ namespace gameboy
             uint8_t operator--(int); // Post-Increment
             uint8_t operator--(); // Pre-Increment
 
-            uint16_t operator&(const uint16_t _offset);
+            uint8_t operator&(const uint8_t _offset);
+            uint8_t operator|(const uint8_t _offset);
+            uint8_t operator-(const uint8_t _value);
+            uint8_t operator+(const uint8_t _value);
 
             void operator+=(const uint8_t _value);
             void operator-=(const uint8_t _value);
@@ -35,6 +38,11 @@ namespace gameboy
             void operator^=(const Register8& _register);
             void operator|=(const Register8& _register);
             void operator&=(const uint16_t _value);
+
+            bool operator==(const uint8_t _value);
+            bool operator==(const Register8& _register);
+            bool operator<(const uint8_t _value);
+            bool operator>(const uint8_t _value);
 
             void operator>>=(const uint8_t _offset);
         private:
@@ -60,8 +68,16 @@ namespace gameboy
             uint16_t operator--(int); // Post-Increment
             uint16_t operator--(); // Pre-Increment
 
-            void operator+=(const Register16 _register);
+            uint16_t operator&(const uint16_t _offset);
+            uint16_t operator+(const Register16& _register);
+            uint16_t operator+(const int8_t & _value);
 
+            uint16_t operator>>(const uint8_t _shifting);
+
+            bool operator==(const uint16_t _value);
+            bool operator==(const Register16& _register);
+
+            void operator+=(const Register16 _register);
             void operator+=(const uint8_t _value);
             void operator-=(const uint8_t _value);
             void operator=(const Register16& _register);

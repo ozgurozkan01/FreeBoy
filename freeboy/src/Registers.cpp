@@ -72,14 +72,48 @@ namespace gameboy
             value >>= _offset;
         }
 
-        uint16_t Register8::operator&(const uint16_t _offset)
+        uint8_t Register8::operator&(const uint8_t _offset)
         {
             return value & _offset;
         }
 
+        uint8_t Register8::operator|(const uint8_t _offset)
+        {
+            return value | _offset;
+        }
+
+        uint8_t Register8::operator-(const uint8_t _value)
+        {
+            return value - _value;
+        }
+
+        uint8_t Register8::operator+(const uint8_t _value)
+        {
+            return value + _value;
+        }
         void Register8::operator=(const uint8_t &_value)
         {
             value = _value;
+        }
+
+        bool Register8::operator==(const uint8_t _value)
+        {
+            return value == _value;
+        }
+
+        bool Register8::operator==(const Register8 &_register)
+        {
+            return value == _register.value;
+        }
+
+        bool Register8::operator<(const uint8_t _value)
+        {
+            return value < _value;
+        }
+
+        bool Register8::operator>(const uint8_t _value)
+        {
+            return value > _value;
         }
 
         /* -------------------------------------------------------------------------- */
@@ -152,6 +186,36 @@ namespace gameboy
         {
             uint16_t result = read() + _register.read();
             write(result);
+        }
+
+        bool Register16::operator==(const uint16_t _value)
+        {
+            return read() == _value;
+        }
+
+        bool Register16::operator==(const Register16 &_register)
+        {
+            return read() == _register.read();
+        }
+
+        uint16_t Register16::operator&(const uint16_t _offset)
+        {
+            return read() & _offset;
+        }
+
+        uint16_t Register16::operator+(const Register16 &_register)
+        {
+            return read() + _register.read();
+        }
+
+        uint16_t Register16::operator+(const int8_t &_value)
+        {
+            return read() + _value;
+        }
+
+        uint16_t Register16::operator>>(const uint8_t _shifting)
+        {
+            return read() >> _shifting;
         }
     }
 }
