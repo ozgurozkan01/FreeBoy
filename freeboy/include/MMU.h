@@ -24,7 +24,7 @@ namespace gameboy
         void write16(const uint16_t _address, const uint16_t _value);
         uint16_t read16(const uint16_t _address);
 
-        void push(Register16& _sp, const Register16& _srcRegister);
+        void push(Register16& _sp, Register16& _srcRegister);
         uint16_t pop(Register16& _sp);
 
     private:

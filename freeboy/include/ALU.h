@@ -28,7 +28,7 @@ namespace gameboy
         void decrement(uint8_t& _value);
 
         void add(const Register8& _srcRegister);
-        void add(const Register16& _srcRegister);
+        void add(Register16& _srcRegister);
         void addToStack(const uint16_t _value);
         void add(const uint8_t _value);
 
