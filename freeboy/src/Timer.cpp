@@ -71,7 +71,7 @@ namespace gameboy
         {
             tima++;
 
-            if (tima.read() >= 0xFF)
+            if (tima == 0x00)
             {
                 tima = tma;
                 interruptHandlerPtr->setIFBit(InterruptType::timer);
