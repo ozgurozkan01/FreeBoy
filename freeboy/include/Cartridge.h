@@ -11,26 +11,27 @@
 
 namespace gameboy
 {
-    struct RomHeader
-    {
-        const int entry = 0x100;
-        const int nintendoLogo = 0x104;
-        const int title = 0x134;
-        const int manufacturerCode = 0x13F;
-        const int cgbFlag = 0x143;
-        const int newLicenseCode = 0x144;
-        const int sgbFlag = 0x146;
-        const int cartridgeType = 0x147;
-        const int romSize = 0x148;
-        const int ramSize = 0x149;
-        const int destinationCode = 0x14A;
-        const int oldLicensCode = 0x14B;
-        const int versionNumber = 0x14C;
-        const int headerChecksum = 0x14D;
-        const int globalChecksum = 0x14E;
-    };
-
     class Cartridge {
+
+        struct Header
+        {
+            const int entry = 0x100;
+            const int nintendoLogo = 0x104;
+            const int title = 0x134;
+            const int manufacturerCode = 0x13F;
+            const int cgbFlag = 0x143;
+            const int newLicenseCode = 0x144;
+            const int sgbFlag = 0x146;
+            const int cartridgeType = 0x147;
+            const int romSize = 0x148;
+            const int ramSize = 0x149;
+            const int destinationCode = 0x14A;
+            const int oldLicensCode = 0x14B;
+            const int versionNumber = 0x14C;
+            const int headerChecksum = 0x14D;
+            const int globalChecksum = 0x14E;
+        } header{};
+
     public:
         Cartridge() = default;
         ~Cartridge() = default;
@@ -45,7 +46,6 @@ namespace gameboy
 
         uint32_t cartridgeSize{};
         uint8_t* cartridgeData{};
-        RomHeader header{};
 
         std::string getDestinationCode(const uint8_t& _address) const;
         std::string getROMType(const uint8_t& _address) const;
