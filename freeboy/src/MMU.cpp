@@ -138,12 +138,12 @@ namespace gameboy
         return low | (high << 8);
     }
 
-    void MMU::push(Register16& _sp, const Register16& _srcRegister)
+    void MMU::push(Register16& _sp, Register16& _srcRegister)
     {
         _sp--;
-        write8(_sp.read(), (_srcRegister.read() >> 8) & 0xFF);
+        write8(_sp.read(), (_srcRegister >> 8) & 0xFF);
         _sp--;
-        write8(_sp.read(), _srcRegister.read() & 0xFF);
+        write8(_sp.read(), _srcRegister & 0xFF);
     }
 
     uint16_t MMU::pop(Register16& _sp)

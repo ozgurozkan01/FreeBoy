@@ -19,12 +19,10 @@ namespace gameboy
     void ALU::or_(const uint8_t _value)
     {
         //printf("\nBefore : %02X\n", cpuPtr->AF.highByte().read());
-        cpuPtr->af.highByte() = cpuPtr->af.highByte().read() | _value;
+        cpuPtr->af.highByte() = cpuPtr->af.highByte() | _value;
         //printf("After : %02X\n", cpuPtr->AF.highByte().read());
 
-        uint8_t result = cpuPtr->af.highByte().read();
-
-        result == 0x00 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->af.highByte() == 0x00 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
         cpuPtr->resetFlag(CPUFlags::n);
         cpuPtr->resetFlag(CPUFlags::h);
         cpuPtr->resetFlag(CPUFlags::c);
@@ -41,9 +39,7 @@ namespace gameboy
         cpuPtr->af.highByte() = cpuPtr->af.highByte().read() ^ _value;
         //printf("After : %02X\n", cpuPtr->AF.highByte().read());
 
-        uint8_t result = cpuPtr->af.highByte().read();
-
-        result == 0x00 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->af.highByte() == 0x00 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
         cpuPtr->resetFlag(CPUFlags::n);
         cpuPtr->resetFlag(CPUFlags::h);
         cpuPtr->resetFlag(CPUFlags::c);
@@ -99,7 +95,6 @@ namespace gameboy
 
         _value == 0x00 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
         cpuPtr->setFlag(CPUFlags::n);
-
         (_value & 0xF) == 0xF ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
     }
 
@@ -110,7 +105,7 @@ namespace gameboy
 
     void ALU::compare(const uint8_t _value)
     {
-        int result = cpuPtr->af.highByte().read() - _value;
+        int result = cpuPtr->af.highByte() - _value;
         //printf("A : %02x - Data : %02x - result : %02x\n", cpuPtr->AF.highByte().read(), _value, result);
 
         result == 0x00 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
@@ -145,16 +140,14 @@ namespace gameboy
 
     void ALU::add(const uint8_t _value)
     {
-        (cpuPtr->af.highByte().read() & 0x0F) + (_value & 0x0F) > 0x0F ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
-        (cpuPtr->af.highByte().read() & 0xFF) + (_value & 0xFF) > 0xFF ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
+        (cpuPtr->af.highByte() & 0x0F) + (_value & 0x0F) > 0x0F ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
+        (cpuPtr->af.highByte() & 0xFF) + (_value & 0xFF) > 0xFF ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
 
         //printf("\nBefore : %02X\n", cpuPtr->AF.highByte().read());
-        cpuPtr->af.highByte() = cpuPtr->af.highByte().read() + _value;
+        cpuPtr->af.highByte() = cpuPtr->af.highByte() + _value;
         //printf("After : %02X\n", cpuPtr->AF.highByte().read());
 
-        uint16_t result = cpuPtr->af.highByte().read();
-
-        result == 0x00 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->af.highByte() == 0x00 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
         cpuPtr->resetFlag(CPUFlags::n);
     }
 
@@ -163,25 +156,25 @@ namespace gameboy
         add(_srcRegister.read());
     }
 
-    void ALU::add(const Register16 &_srcRegister)
+    void ALU::add(Register16 &_srcRegister)
     {
-        ((cpuPtr->hl.read() & 0x0FFF) + (_srcRegister.read() & 0x0FFF) > 0x0FFF) ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
-        ((cpuPtr->hl.read() & 0xFFFF) + (_srcRegister.read() & 0xFFFF) > 0xFFFF) ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
+        ((cpuPtr->hl & 0x0FFF) + (_srcRegister & 0x0FFF) > 0x0FFF) ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
+        ((cpuPtr->hl & 0xFFFF) + (_srcRegister & 0xFFFF) > 0xFFFF) ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
         cpuPtr->resetFlag(CPUFlags::n);
 
         //printf("\nBefore : %02X\n", cpuPtr->HL.read());
-        cpuPtr->hl = cpuPtr->hl.read() + _srcRegister.read();
+        cpuPtr->hl = cpuPtr->hl + _srcRegister;
         //printf("After : %02X\n", cpuPtr->HL.read());
     }
 
     void ALU::addToStack(const uint16_t _value)
     {
-        (cpuPtr->sp.read() & 0x0F) + (_value & 0x0F) > 0x0F ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
-        ((int)(cpuPtr->sp.read() & 0xFF) + (int)(_value & 0xFF)) > 0xFF ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
+        (cpuPtr->sp & 0x0F) + (_value & 0x0F) > 0x0F ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
+        ((int)(cpuPtr->sp & 0xFF) + (int)(_value & 0xFF)) > 0xFF ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
         //printf("\n%02x\n", ((int)(cpuPtr->SP.read() & 0xFF) + (int)(_value & 0xFF)));
 
         //printf("\nBefore : %02X\n", cpuPtr->SP.read());
-        cpuPtr->sp = cpuPtr->sp.read() + static_cast<int8_t>(_value);
+        cpuPtr->sp = cpuPtr->sp + static_cast<int8_t>(_value);
         //printf("After : %02X\n", cpuPtr->SP.read());
 
         cpuPtr->resetFlag(CPUFlags::z);
@@ -206,9 +199,7 @@ namespace gameboy
         cpuPtr->af.highByte() += _value + cFlag;
         //printf("After : %02X\n", cpuPtr->AF.highByte().read());
 
-        uint8_t result = cpuPtr->af.highByte().read();
-
-        result == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->af.highByte() == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
     }
 
     void ALU::and_(const Register8 _srcRegister)
@@ -222,9 +213,7 @@ namespace gameboy
         cpuPtr->af.highByte() = cpuPtr->af.highByte().read() & _value;
         //printf("After : %02X\n", cpuPtr->AF.highByte().read());
 
-        uint8_t result = cpuPtr->af.highByte().read();
-
-        result == 0x00 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->af.highByte() == 0x00 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
         cpuPtr->resetFlag(CPUFlags::n);
         cpuPtr->setFlag(CPUFlags::h);
         cpuPtr->resetFlag(CPUFlags::c);
@@ -232,16 +221,14 @@ namespace gameboy
 
     void ALU::subtract(const uint8_t _value)
     {
-        _value > cpuPtr->af.highByte().read() ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
-        (_value & 0x0F) > (cpuPtr->af.highByte().read() & 0x0F) ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
+        cpuPtr->af.highByte() < _value ? cpuPtr->setFlag(CPUFlags::c) : cpuPtr->resetFlag(CPUFlags::c);
+        (_value & 0x0F) > (cpuPtr->af.highByte() & 0x0F) ? cpuPtr->setFlag(CPUFlags::h) : cpuPtr->resetFlag(CPUFlags::h);
 
         //printf("\nBefore : %02X\n", cpuPtr->AF.highByte().read());
         cpuPtr->af.highByte() = cpuPtr->af.highByte().read() - _value;
         //printf("After : %02X\n", cpuPtr->AF.highByte().read());
 
-        uint8_t result = cpuPtr->af.highByte().read();
-
-        result == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->af.highByte() == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
         cpuPtr->setFlag(CPUFlags::n);
     }
 
@@ -268,9 +255,7 @@ namespace gameboy
         cpuPtr->af.highByte() = A - _value - cFlag;
         //printf("After : %02X\n", cpuPtr->AF.highByte().read());
 
-        uint8_t result = cpuPtr->af.highByte().read();
-
-        result == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
+        cpuPtr->af.highByte() == 0x0 ? cpuPtr->setFlag(CPUFlags::z) : cpuPtr->resetFlag(CPUFlags::z);
     }
 
     void ALU::srl(Register8 &_dstRegister)
@@ -459,12 +444,12 @@ namespace gameboy
 
         if (!cpuPtr->checkFlag(CPUFlags::n))
         {
-            if (cpuPtr->checkFlag(CPUFlags::c) || cpuPtr->af.highByte().read() > 0x99)
+            if (cpuPtr->checkFlag(CPUFlags::c) || cpuPtr->af.highByte() > 0x99)
             {
                 cpuPtr->af.highByte() += 0x60;
                 cpuPtr->setFlag(CPUFlags::c);
             }
-            if (cpuPtr->checkFlag(CPUFlags::h) || (cpuPtr->af.highByte().read() & 0x0F) > 0x09)
+            if (cpuPtr->checkFlag(CPUFlags::h) || (cpuPtr->af.highByte() & 0x0F) > 0x09)
             {
                 cpuPtr->af.highByte() += 0x6;
             }
@@ -480,7 +465,7 @@ namespace gameboy
                 cpuPtr->af.highByte() -= 0x06;
             }
         }
-        if (cpuPtr->af.highByte().read() == 0)
+        if (cpuPtr->af.highByte() == 0)
         {
             cpuPtr->setFlag(CPUFlags::z);
         }
