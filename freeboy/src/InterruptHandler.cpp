@@ -14,6 +14,8 @@ namespace gameboy
 
     void InterruptHandler::requestInterrupt(CPU* _cpu, MMU* _mmu)
     {
+        if (!IME) { return; }
+
         if      (isEnableIF(InterruptType::vblank) && isEnableIE(InterruptType::vblank)) { trigger(_cpu, _mmu, 0x40, InterruptType::vblank); }
         else if (isEnableIF(InterruptType::lcd)    && isEnableIE(InterruptType::lcd))    { trigger(_cpu, _mmu, 0x48, InterruptType::lcd);    }
         else if (isEnableIF(InterruptType::timer)  && isEnableIE(InterruptType::timer))  { trigger(_cpu, _mmu, 0x50, InterruptType::timer);  }
