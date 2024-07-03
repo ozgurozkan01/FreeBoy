@@ -4,7 +4,7 @@
 
 #include "../include/PPU.h"
 
-namespace gameboy
+namespace gameboy::graphic
 {
     void PPU::writeVRAM(const uint16_t _address, const uint8_t _value)
     {
