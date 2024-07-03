@@ -10,8 +10,7 @@
 namespace gameboy
 {
     Timer::Timer(InterruptHandler* _interruptHandler) :
-            clockFrequency(4194304),
-            previousTimaResult(false),
+            previousBit(false),
             interruptHandlerPtr(_interruptHandler),
             div(0xABCC),
             tima(0x00),
@@ -21,27 +20,23 @@ namespace gameboy
 
     void Timer::write(uint16_t _address, uint8_t _value)
     {
-        if (_address == 0xFF04)      { div = 0;}
-        else if (_address == 0xFF05) { tima = _value; }
-        else if (_address == 0xFF06) { tma = _value; }
-        else if (_address == 0xFF07) { tac = _value; }
-        else
-        {
-            printf("INVALID MEMORY ADDRESS: %#02x", _address);
-            exit(-1);
+        switch (_address) {
+            case 0xFF04: div = 0; break;
+            case 0xFF05: tima = _value; break;
+            case 0xFF06: tma = _value; break;
+            case 0xFF07: tac = _value; break;
+            default: printf("Invalid Timer Address : %#02x", _address); exit(-1);
         }
     }
 
     uint8_t Timer::read(uint16_t _address)
     {
-        if (_address == 0xFF04)      { return div.read() >> 8;}
-        else if (_address == 0xFF05) { return tima.read(); }
-        else if (_address == 0xFF06) { return tma.read(); }
-        else if (_address == 0xFF07) { return tac.read(); }
-        else
-        {
-            printf("INVALID MEMORY ADDRESS: %#02x", _address);
-            exit(-1);
+        switch (_address) {
+            case 0xFF04: return div.read() >> 8;
+            case 0xFF05: return tima.read();
+            case 0xFF06: return tma.read();
+            case 0xFF07: return tac.read();
+            default: printf("Invalid Timer Address : %#02x", _address); exit(-1);
         }
     }
 
@@ -49,25 +44,18 @@ namespace gameboy
     {
         div++;
 
-        bool newTimaResult;
+        bool currentBit;
 
         switch (tac & 0x03)
         {
-            case 0x00:
-                newTimaResult = (div.read() & (1 << 9)) && (tac & (1 << 3));
-                break;
-            case 0x01:
-                newTimaResult = (div.read() & (1 << 3)) && (tac & (1 << 3));
-                break;
-            case 0x10:
-                newTimaResult = (div.read() & (1 << 5)) && (tac & (1 << 3));
-                break;
-            case 0x11:
-                newTimaResult = (div.read() & (1 << 7)) && (tac & (1 << 3));
-                break;
+            case 0x00: currentBit = getCurrentBit(9); break;
+            case 0x01: currentBit = getCurrentBit(3); break;
+            case 0x10: currentBit = getCurrentBit(5); break;
+            case 0x11: currentBit = getCurrentBit(7); break;
         }
 
-        if (!newTimaResult && previousTimaResult)
+        bool isFallingEdge = !currentBit && previousBit;
+        if (isFallingEdge)
         {
             tima++;
 
@@ -78,6 +66,11 @@ namespace gameboy
             }
         }
 
-        previousTimaResult = newTimaResult;
+        previousBit = currentBit;
+    }
+
+    bool Timer::getCurrentBit(const uint8_t _bit)
+    {
+        return (div & (1 << _bit)) && (tac & (1 << 3));
     }
 }
