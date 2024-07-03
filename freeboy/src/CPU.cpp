@@ -45,10 +45,7 @@ namespace gameboy
             isHalted = false;
         }
 
-        if (interruptHandlerPtr->getIME())
-        {
-            interruptHandlerPtr->requestInterrupt(this, mmuPtr);
-        }
+        interruptHandlerPtr->requestInterrupt(this, mmuPtr);
     }
 
     void CPU::fetch()
