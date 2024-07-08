@@ -36,7 +36,7 @@ namespace gameboy
             return temp;
         }
 
-        void Register8::operator+=(const uint8_t _value)
+        void Register8::operator+=(const uint16_t _value)
         {
             uint8_t current = read();
             write(current + _value);
@@ -52,6 +52,11 @@ namespace gameboy
             value |= _register.read();
         }
 
+        void Register8::operator|=(const uint16_t _value)
+        {
+            value |= _value;
+        }
+
         void Register8::operator&=(const uint16_t _value)
         {
             value &= _value;
@@ -62,32 +67,32 @@ namespace gameboy
             value = _register.read();
         }
 
-        void Register8::operator-=(const uint8_t _value)
+        void Register8::operator-=(const uint16_t _value)
         {
             value -= _value;
         }
 
-        void Register8::operator>>=(const uint8_t _offset)
+        void Register8::operator>>=(const uint16_t _offset)
         {
             value >>= _offset;
         }
 
-        uint8_t Register8::operator&(const uint8_t _offset)
+        uint8_t Register8::operator&(const uint16_t _offset)
         {
             return value & _offset;
         }
 
-        uint8_t Register8::operator|(const uint8_t _offset)
+        uint8_t Register8::operator|(const uint16_t _offset)
         {
             return value | _offset;
         }
 
-        uint8_t Register8::operator-(const uint8_t _value)
+        uint8_t Register8::operator-(const uint16_t _value)
         {
             return value - _value;
         }
 
-        uint8_t Register8::operator+(const uint8_t _value)
+        uint8_t Register8::operator+(const uint16_t _value)
         {
             return value + _value;
         }
@@ -106,14 +111,28 @@ namespace gameboy
             return value == _register.value;
         }
 
-        bool Register8::operator<(const uint8_t _value)
+        bool Register8::operator<(const uint16_t _value)
         {
             return value < _value;
         }
 
-        bool Register8::operator>(const uint8_t _value)
+        bool Register8::operator>(const uint16_t _value)
         {
             return value > _value;
+        }
+
+        bool Register8::operator>=(const uint16_t _value) {
+            return value >= _value;
+        }
+
+        bool Register8::operator<=(const uint16_t _value)
+        {
+            return value <= _value;
+        }
+
+        uint8_t Register8::operator~()
+        {
+            return ~(value);
         }
 
         /* -------------------------------------------------------------------------- */
@@ -145,7 +164,7 @@ namespace gameboy
             return temp;
         }
 
-        void Register16::operator+=(const uint8_t _value)
+        void Register16::operator+=(const uint16_t _value)
         {
             uint16_t data = read() + _value;
             write(data);
@@ -176,7 +195,7 @@ namespace gameboy
             write(_value);
         }
 
-        void Register16::operator-=(const uint8_t _value)
+        void Register16::operator-=(const uint16_t _value)
         {
             uint16_t temp = read() - _value;
             write(temp);
@@ -208,7 +227,7 @@ namespace gameboy
             return read() + _register.read();
         }
 
-        uint16_t Register16::operator+(const int8_t &_value)
+        uint16_t Register16::operator+(const int16_t & _value)
         {
             return read() + _value;
         }
