@@ -6,6 +6,7 @@
 #include "../include/MMU.h"
 #include <chrono>
 #include <thread>
+#include <cstdio>
 
 namespace gameboy
 {
@@ -14,7 +15,7 @@ namespace gameboy
         mmuPtr(_mmu)
     {}
 
-    void DMA::startTransfer(uint8_t _address)
+    void DMA::transferData(uint8_t _address)
     {
         isActive = true;
         lowerByte = 0;

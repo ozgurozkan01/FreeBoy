@@ -23,9 +23,12 @@ namespace gameboy
     public:
         DMA(PPU* _ppu, MMU* _mmu);
 
-        void startTransfer(uint8_t _address);
+        void transferData(uint8_t _address);
         void tick();
         bool isTransferring();
+
+        uint8_t getValue() const { return upperByte; };
+
     private:
         bool isActive;
         uint8_t lowerByte;
