@@ -24,14 +24,14 @@ namespace gameboy
 
         void tick();
     private:
-        bool getCurrentBit(const uint8_t _bit);
 
-        Register16 div; // Divider Register , MSByte is usable - 0xFF04
-        Register8 tima; // Timer Counter    - 0xFF05
-        Register8 tma;  // Timer Modulo     - 0xFF06
-        Register8 tac;  // Timer Control    - 0xFF07
+         void updateTimer();
+         void updateTIMA();
 
-        bool previousBit;
+         Register16 div; // Divider Register , MSByte is usable - 0xFF04
+         Register8 tima; // Timer Counter    - 0xFF05
+         Register8 tma;  // Timer Modulo     - 0xFF06
+         Register8 tac;  // Timer Control    - 0xFF07
 
         InterruptHandler* interruptHandlerPtr;
     };

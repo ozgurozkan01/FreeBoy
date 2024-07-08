@@ -10,11 +10,8 @@
 namespace gameboy
 {
     Timer::Timer(InterruptHandler* _interruptHandler) :
-            previousBit(false),
             interruptHandlerPtr(_interruptHandler),
             div(0xABCC),
-            tima(0x00),
-            tma(0x00),
             tac(0xF8)
     {}
 
@@ -42,35 +39,67 @@ namespace gameboy
 
     void Timer::tick()
     {
+        updateTimer();
+    }
+
+    void Timer::updateTimer()
+    {
+        uint16_t prevDiv = div.read();
+
         div++;
 
-        bool currentBit;
+        bool isFallingEdge;
 
         switch (tac & 0x03)
         {
-            case 0x00: currentBit = getCurrentBit(9); break;
-            case 0x01: currentBit = getCurrentBit(3); break;
-            case 0x10: currentBit = getCurrentBit(5); break;
-            case 0x11: currentBit = getCurrentBit(7); break;
-        }
-
-        bool isFallingEdge = !currentBit && previousBit;
-        if (isFallingEdge)
-        {
-            tima++;
-
-            if (tima == 0x00)
+            case 0x00:
             {
-                tima = tma;
-                interruptHandlerPtr->setIFBit(InterruptType::timer);
+                uint16_t prevResult = prevDiv & (1 << 9);
+                uint16_t currentResult = !(div & (1 << 9));
+                isFallingEdge = prevResult && currentResult;
+                break;
+            }
+            case 0x01:
+            {
+                uint16_t prevResult = prevDiv & (1 << 3);
+                uint16_t currentResult = !(div & (1 << 3));
+                isFallingEdge = prevResult && currentResult;
+                break;
+            }
+
+            case 0x10:
+            {
+                uint16_t prevResult = prevDiv & (1 << 5);
+                uint16_t currentResult = !(div & (1 << 5));
+                isFallingEdge = prevResult && currentResult;
+                break;
+            }
+
+            case 0x11:
+            {
+                uint16_t prevResult = prevDiv & (1 << 7);
+                uint16_t currentResult = !(div & (1 << 7));
+                isFallingEdge = prevResult && currentResult;
+                break;
             }
         }
 
-        previousBit = currentBit;
+        bool currentAndResult = isFallingEdge && (tac & (1 << 2));
+        if (currentAndResult)
+        {
+            updateTIMA();
+        }
     }
 
-    bool Timer::getCurrentBit(const uint8_t _bit)
+    void Timer::updateTIMA()
     {
-        return (div & (1 << _bit)) && (tac & (1 << 3));
+        tima++;
+
+        if (tima == 0xFF)
+        {
+            tima = tma;
+            interruptHandlerPtr->requestInterrupt(InterruptType::timer);
+        }
     }
 }
+
