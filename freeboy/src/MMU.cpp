@@ -7,7 +7,6 @@
 #include "../include/Cartridge.h"
 #include "../include/InterruptHandler.h"
 #include "../include/IO.h"
-#include "../include/PPU.h"
 #include "../include/DMA.h"
 #include <cstdio>
 
@@ -41,7 +40,7 @@ namespace gameboy
         }
         else if (_address < 0xFE00)
         {
-            printf(" (W-Echo RAM) "); return;
+            return;
         }
         else if (_address < 0xFEA0)
         {
@@ -51,7 +50,12 @@ namespace gameboy
         }
         else if (_address < 0xFF00)
         {
-            printf(" (W-Not Usable Memory) "); return;
+             return;
+        }
+        else if (_address == 0xFF50)
+        {
+            isBootRomActive = false;
+            return;
         }
         else if (_address < 0xFF80)
         {
@@ -74,6 +78,10 @@ namespace gameboy
     }
     uint8_t MMU::read8(const uint16_t _address)
     {
+        if ((_address < 0x100) && isBootRomActive)
+        {
+            return dmgBootROM[_address];
+        }
         if (_address < 0x8000)
         {
             return gameBoyPtr->cartridge->read(_address);
@@ -92,19 +100,20 @@ namespace gameboy
         }
         else if (_address < 0xFE00)
         {
-            printf(" (R-Echo RAM) ");
             return 0x0;
         }
         else if (_address < 0xFEA0)
         {
             if (gameBoyPtr->dma->isTransferring()) { return 0xFF; }
-
             return gameBoyPtr->ppu->readOAM(_address);
         }
         else if (_address < 0xFF00)
         {
-            printf(" (R-Not Usable Memory) ");
             return 0x0;
+        }
+        else if (_address == 0xFF50)
+        {
+            exit(-1);
         }
         else if (_address < 0xFF80)
         {
@@ -141,9 +150,9 @@ namespace gameboy
     void MMU::push(Register16& _sp, Register16& _srcRegister)
     {
         _sp--;
-        write8(_sp.read(), (_srcRegister >> 8) & 0xFF);
+        write8(_sp.read(), (_srcRegister.read() >> 8) & 0xFF);
         _sp--;
-        write8(_sp.read(), _srcRegister & 0xFF);
+        write8(_sp.read(), _srcRegister.read() & 0xFF);
     }
 
     uint16_t MMU::pop(Register16& _sp)
@@ -151,5 +160,10 @@ namespace gameboy
         uint16_t popped = read16(_sp.read());
         _sp += 2;
         return popped;
+    }
+
+    bool MMU::isBootRomEnable()
+    {
+        return isBootRomActive;
     }
 }
