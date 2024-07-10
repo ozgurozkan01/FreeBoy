@@ -38,7 +38,6 @@ namespace gameboy
         ~CPU();
         void run();
         void emulateCycles(uint8_t cycleCount);
-
     private:
         uint8_t currentOpcode{};
 
@@ -60,8 +59,14 @@ namespace gameboy
         Register16 pc; /* Program Counter */
         Register16 sp; /* Stack Pointer */
 
-        bool isStopped{};
-        bool isHalted{};
+        bool isStopped;
+        bool isHalted;
+
+        char dbg_msg[1024] = {0};
+        int msg_size = 0;
+
+        void debugUpdate();
+        void debugPrint();
 
         void fetch();
         void execute();
@@ -70,15 +75,12 @@ namespace gameboy
         void decodeStandardInstructions();
         void decodeExtendedInstructions();
 
-        void halt();
-
         void setFlag(const CPUFlags _flag);
         void resetFlag(const CPUFlags _flag);
         void toggleFlag(const CPUFlags _flag);
         uint8_t readFlag(const CPUFlags _flag);
         bool checkFlag(const CPUFlags _flag);
 
-        /* STANDARD INSTRUCTIONS */
         void load(Register16& _register, const uint16_t _value);
         void load(Register8& _register, const uint8_t _value);
         void load(Register8& _dstRegister, const Register8& _srcRegister);
@@ -95,6 +97,7 @@ namespace gameboy
         void ei();
         void ret();
         void reti();
+        void halt();
     };
 }
 

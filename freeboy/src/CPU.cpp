@@ -8,6 +8,7 @@
 #include "../include/MMU.h"
 #include "../include/ALU.h"
 #include "../include/InterruptHandler.h"
+#include <unistd.h>
 
 #define DEBUG_MODE 1
 
@@ -23,7 +24,7 @@ namespace gameboy
             af(0x01B0), /* Acuumulator and Flags */
             bc(0x0013), de(0x00D8), hl(0x014D), /* General Purpose Registers */
             sp(0xFFFE), /* Stack Pointer */
-            pc(0x0100)  /* Program Counter */
+            pc(0)  /* Program Counter */
     {
         alu = new ALU(this);
     }
@@ -34,25 +35,26 @@ namespace gameboy
         if (alu) { delete alu; }
     }
 
+    void CPU::run()
+    {
+        while (gameBoyPtr->currentState == EmulatorState::running)
+        {
+            step();
+        }
+    }
+
     void CPU::step()
     {
-        if (isHalted == 0)
+        if (!isHalted)
         {
             fetch();
             execute();
         }
 
-        else
-        {
-            printf("if : %d\n", interruptHandlerPtr->getIF().read());
-            if (interruptHandlerPtr->getIF().read())
-            {
-                isHalted = false;
-                printf("HALTED FALSE\n");
-            }
-        }
-        //if (isHalted) { exit(-1); }
-        interruptHandlerPtr->requestInterrupt(this, mmuPtr);
+        debugUpdate();
+        debugPrint();
+
+        interruptHandlerPtr->run(this, mmuPtr);
     }
 
     void CPU::fetch()
@@ -63,16 +65,15 @@ namespace gameboy
 #if DEBUG_MODE == 0
         char flags[16];
         sprintf(flags, "%c%c%c%c",
-                af.lowByte() & (1 << static_cast<uint8_t>(CPUFlags::z)) ? 'Z' : '-',
-                af.lowByte() & (1 << static_cast<uint8_t>(CPUFlags::n)) ? 'N' : '-',
-                af.lowByte() & (1 << static_cast<uint8_t>(CPUFlags::h)) ? 'H' : '-',
-                af.lowByte() & (1 << static_cast<uint8_t>(CPUFlags::c)) ? 'C' : '-'
+                af.lowByte().read() & (1 << static_cast<uint8_t>(CPUFlags::z)) ? 'Z' : '-',
+                af.lowByte().read() & (1 << static_cast<uint8_t>(CPUFlags::n)) ? 'N' : '-',
+                af.lowByte().read() & (1 << static_cast<uint8_t>(CPUFlags::h)) ? 'H' : '-',
+                af.lowByte().read() & (1 << static_cast<uint8_t>(CPUFlags::c)) ? 'C' : '-'
         );
 
-        printf("%08lX - PC:%02X : %s (%02X %02X %02X) : (A:%02X - F:%s - BC:%04X - DE:%04X - HL:%04X)\n",
+        printf("%08lX - PC:%02X  (%02X %02X %02X) : (A:%02X - F:%s - BC:%04X - DE:%04X - HL:%04X : SP:%04X %s\n",
                gameBoyPtr->ticks,
                pc.read() - 1,
-               currentInstruction->nmenomic.c_str(),
                currentOpcode,
                mmuPtr->read8(pc.read()),
                mmuPtr->read8(pc.read() + 1),
@@ -81,8 +82,11 @@ namespace gameboy
                bc.read(),
                de.read(),
                hl.read(),
-               sp.read());
+               sp.read(),
+               currentInstruction->nmenomic.c_str()
+               );
 #endif
+
     }
 
     void CPU::execute()
@@ -146,6 +150,7 @@ namespace gameboy
 
     void CPU::relativeJump(const uint16_t _data)
     {
+        //printf("new PC : $%02x\n", pc.read() + _data);
         //printf("\nBefore : %02X\n", PC.read());
         pc = pc.read() + _data;
         //printf("After : %02X\n", PC.read());
@@ -165,8 +170,8 @@ namespace gameboy
         pc = vector;
     }
 
-    void CPU::di() { interruptHandlerPtr->setIME(false); }
-    void CPU::ei() { interruptHandlerPtr->setIME(true); }
+    void CPU::di() { interruptHandlerPtr->setIME(false); interruptHandlerPtr->setScheduledIME(false); }
+    void CPU::ei() { interruptHandlerPtr->setScheduledIME(true); }
 
     void CPU::ret()
     {
@@ -184,8 +189,6 @@ namespace gameboy
     void CPU::halt()
     {
         isHalted = true;
-        printf("Count ; %#02x", gameBoyPtr->counter);
-        exit(-1);
     }
 
     void CPU::decodeStandardInstructions()
@@ -333,6 +336,7 @@ namespace gameboy
             case 0x20:
             {
                 int8_t e8 = static_cast<int8_t>(mmuPtr->read8(pc++));
+                //printf("e8 : $%02x\n", e8);
                 if (!checkFlag(CPUFlags::z))
                 {
                     relativeJump(e8);
@@ -1229,6 +1233,7 @@ namespace gameboy
                 uint8_t a8 = mmuPtr->read8(pc++);
                 uint16_t address = 0xFF00 | a8;
                 uint8_t data = mmuPtr->read8(address);
+                //printf("Address : %#02x - Data : %#02x\n", address, data);
                 load(af.highByte(), data);
                 return;
             }
@@ -1310,7 +1315,6 @@ namespace gameboy
     void CPU::decodeExtendedInstructions()
     {
         currentOpcode = mmuPtr->read8(pc++);
-
         emulateCycles(cpuProcess->cbInstructions[currentOpcode].mCycles);
 
         switch (currentOpcode)
@@ -2278,11 +2282,20 @@ namespace gameboy
         }
     }
 
-    void CPU::run()
-    {
-        while (gameBoyPtr->currentState == EmulatorState::running)
+    void CPU::debugUpdate() {
+        if (mmuPtr->read8(0xFF02) == 0x81)
         {
-            step();
+            char c = mmuPtr->read8(0xFF01);
+
+            dbg_msg[msg_size++] = c;
+
+            mmuPtr->write8(0xFF02, 0);
+        }
+    }
+
+    void CPU::debugPrint() {
+        if (dbg_msg[0]) {
+            printf("DBG: %s\n", dbg_msg);
         }
     }
 }
