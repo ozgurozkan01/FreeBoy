@@ -47,6 +47,7 @@ namespace gameboy
             bool operator<=(const uint16_t _value);
             bool operator>(const uint16_t _value);
             bool operator>=(const uint16_t _value);
+            bool operator>=(const Register8& _register);
 
             void operator>>=(const uint16_t _offset);
         private:

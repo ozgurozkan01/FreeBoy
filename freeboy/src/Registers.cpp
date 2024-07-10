@@ -125,6 +125,11 @@ namespace gameboy
             return value >= _value;
         }
 
+        bool Register8::operator>=(const Register8 &_register)
+        {
+            return value >= _register.value;
+        }
+
         bool Register8::operator<=(const uint16_t _value)
         {
             return value <= _value;
