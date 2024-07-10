@@ -12,7 +12,10 @@ namespace gameboy
 {
     DMA::DMA(PPU *_ppu, MMU *_mmu) :
         ppuPtr(_ppu),
-        mmuPtr(_mmu)
+        mmuPtr(_mmu),
+        isActive(false),
+        lowerByte(0),
+        upperByte(0)
     {}
 
     void DMA::transferData(uint8_t _address)
@@ -24,7 +27,7 @@ namespace gameboy
 
     void DMA::tick()
     {
-        if (!isActive) { return; }
+        if (!isTransferring()) { return; }
 
         // Source:      $XX00-$XX9F
         // Destination: $FE00-$FE9F
