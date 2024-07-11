@@ -16,24 +16,31 @@ namespace gameboy
 
     namespace graphic
     {
+        class PPU;
 
         class Renderer {
         public:
-            Renderer(const char *_windowName, MMU* _mmu);
+            Renderer(const char *_windowName, MMU* _mmu, PPU* _ppu);
             ~Renderer();
 
             bool init();
+            void render();
             void renderDebugger();
+            void renderMainWindow();
+
+            static const uint8_t scale = 4;
+
+            static const uint16_t yResolution = 144;
+            static const uint16_t xResolution = 160;
+
+            static const uint16_t screenWidth = xResolution * scale;
+            static const uint16_t screenHeight = yResolution * scale;
         private:
 
             void displayTile(SDL_Surface *_surface, uint16_t _tileIndex, uint16_t _x, uint16_t _y);
 
-            const uint8_t windowScale;
-            const uint8_t debuggerScale;
 
             const char* windowName;
-            const uint16_t windowHeight;
-            const uint16_t windowWidth;
 
             const char* debuggerName;
             const uint16_t debuggerHeight;
@@ -54,6 +61,7 @@ namespace gameboy
 
             std::array<uint32_t, 4> tilePalette = { 0xFFFFFFFF, 0xFFAAAAAA, 0xFF555555, 0xFF000000 };
             MMU* mmuPtr;
+            PPU* ppuPtr;
         };
     }
 }
