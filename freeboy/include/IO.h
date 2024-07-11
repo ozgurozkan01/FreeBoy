@@ -7,6 +7,7 @@
 
 #include <array>
 #include <cstdint>
+#include "LCD.h"
 
 namespace gameboy
 {
@@ -15,9 +16,11 @@ namespace gameboy
     class InterruptHandler;
     class DMA;
 
+    using namespace graphic;
+
     class IO {
     public:
-        IO(Joypad* _joypad, Timer* _timer, InterruptHandler* _interruptHandler, DMA* _dma);
+        IO(Joypad* _joypad, Timer* _timer, InterruptHandler* _interruptHandler, LCD* _lcd);
 
         uint8_t read(const uint16_t _address);
         void write(const uint16_t _address, const uint8_t _value);
@@ -28,9 +31,7 @@ namespace gameboy
         InterruptHandler* interruptHandlerPtr;
         Joypad* joypadPtr;
         Timer* timerPtr;
-        DMA* dma;
-
-        uint8_t ly{};
+        LCD* lcd;
     };
 }
 

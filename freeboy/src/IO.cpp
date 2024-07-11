@@ -10,11 +10,11 @@
 
 namespace gameboy
 {
-    IO::IO(Joypad *_joypad, Timer* _timer, InterruptHandler* _interruptHandler, DMA* _dma) :
+    IO::IO(Joypad *_joypad, Timer* _timer, InterruptHandler* _interruptHandler, LCD* _lcd) :
     interruptHandlerPtr(_interruptHandler),
     joypadPtr(_joypad),
     timerPtr(_timer),
-    dma(_dma),
+    lcd(_lcd),
     sb(0x0),
     sc(0x7E)
     {}
@@ -41,19 +41,22 @@ namespace gameboy
         {
             return interruptHandlerPtr->getIF().read();
         }
-        if (_address == 0xFF44) {
-            return ly++;
+        else if (_address <= 0xFF4B && _address >= 0xFF40)
+        {
+            return lcd->read(_address);
         }
-        return 0xFF;
+
+        exit(-1);
     }
 
     void IO::write(const uint16_t _address, const uint8_t _value)
     {
         if (_address == 0xFF00)
         {
-            joypadPtr->write(_value);
+            joypadPtr->setSelections(_value);
             return;
         }
+
         else if (_address == 0xFF01)
         {
             sb = _value;
@@ -74,9 +77,9 @@ namespace gameboy
             interruptHandlerPtr->setIF(_value);
             return;
         }
-        else if (_address == 0xFF46)
+        else if (_address <= 0xFF4B && _address >= 0xFF40)
         {
-            dma->init(_value);
+            lcd->write(_address, _value);
             return;
         }
     }
