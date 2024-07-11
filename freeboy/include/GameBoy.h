@@ -6,21 +6,25 @@
 #define FREEBOY_GAMEBOY_H
 
 #include "SDL2/SDL.h"
+#include "Renderer.h"
+#include "PPU.h"
+#include "LCD.h"
 #include <cstdint>
 #include <string>
 
 namespace gameboy
 {
+    using namespace graphic;
+
     class InterruptHandler;
     class Cartridge;
-    class Renderer;
     class Joypad;
     class Timer;
     class CPU;
-    class PPU;
     class MMU;
     class DMA;
     class IO;
+
 
     enum class EmulatorState : uint8_t
     {
@@ -52,6 +56,7 @@ namespace gameboy
         CPU* cpu;
         MMU* mmu;
         PPU* ppu;
+        LCD* lcd;
         DMA* dma;
         IO* io;
 
