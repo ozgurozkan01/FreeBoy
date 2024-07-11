@@ -28,14 +28,12 @@ namespace gameboy
         uint16_t pop(Register16& _sp);
 
     private:
-        bool isBootRomEnable();
-
         GameBoy* gameBoyPtr;
 
         std::array<uint8_t, 0x2000> workRAM = {0};
         std::array<uint8_t, 0x80> highRAM = {0};
 
-        bool isBootRomActive = true;
+        bool isBootRomActive;
 
         const std::array<uint8_t , 0x100> dmgBootROM = {
                 0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF, 0x0E,

@@ -8,12 +8,14 @@
 #include "../include/InterruptHandler.h"
 #include "../include/IO.h"
 #include "../include/DMA.h"
+#include "../include/Joypad.h"
 #include <cstdio>
 
 namespace gameboy
 {
     MMU::MMU(GameBoy* _gameBoy) :
-        gameBoyPtr(_gameBoy)
+        gameBoyPtr(_gameBoy),
+        isBootRomActive(true)
     {}
 
     void MMU::write8(const uint16_t _address, const uint8_t _value)
@@ -50,7 +52,7 @@ namespace gameboy
         }
         else if (_address < 0xFF00)
         {
-             return;
+            return;
         }
         else if (_address == 0xFF50)
         {
@@ -72,8 +74,6 @@ namespace gameboy
             gameBoyPtr->interruptHandler->setIE(_value);
             return;
         }
-
-        printf("\nUNSUPPORTED MEMORY WRITE %02X\n", _address);
         exit(-1);
     }
     uint8_t MMU::read8(const uint16_t _address)
@@ -111,10 +111,6 @@ namespace gameboy
         {
             return 0x0;
         }
-        else if (_address == 0xFF50)
-        {
-            exit(-1);
-        }
         else if (_address < 0xFF80)
         {
             return gameBoyPtr->io->read(_address);
@@ -127,8 +123,6 @@ namespace gameboy
         {
             return gameBoyPtr->interruptHandler->getIE().read();
         }
-
-        printf("\nUNSUPPORTED MEMORY READ %02X\n", _address);
         exit(-1);
     }
 
@@ -160,10 +154,5 @@ namespace gameboy
         uint16_t popped = read16(_sp.read());
         _sp += 2;
         return popped;
-    }
-
-    bool MMU::isBootRomEnable()
-    {
-        return isBootRomActive;
     }
 }
