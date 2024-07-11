@@ -5,17 +5,14 @@
 #include "../include/GameBoy.h"
 #include "../include/InterruptHandler.h"
 #include "../include/Cartridge.h"
-#include "../include/Renderer.h"
 #include "../include/Joypad.h"
 #include "../include/Timer.h"
 #include "../include/CPU.h"
 #include "../include/MMU.h"
-#include "../include/PPU.h"
 #include "../include/DMA.h"
 #include "../include/IO.h"
 #include <cstdio>
 #include <thread>
-
 namespace gameboy
 {
     GameBoy::GameBoy(std::string _romPath) :
@@ -34,20 +31,25 @@ namespace gameboy
         }
 
         mmu = new MMU(this);
-        ppu = new PPU();
-        renderer = new Renderer(cartridge->getTitle(), mmu);
+
+
+        interruptHandler = new InterruptHandler();
+        joypad = new Joypad();
+        timer = new Timer(interruptHandler);
+        ppu = new PPU(interruptHandler, mmu);
+        dma = new DMA(ppu, mmu);
+        lcd = new LCD(dma, interruptHandler, ppu);
+        io = new IO(joypad, timer, interruptHandler,lcd);
+        cpu = new CPU(this, mmu, interruptHandler);
+
+        ppu->connectLCD(lcd);
+
+        renderer = new Renderer(cartridge->getTitle(), mmu, ppu);
         if (!renderer->init())
         {
             printf("ERROR : SDL Window could not be created!\n");
             return false;
         }
-
-        interruptHandler = new InterruptHandler();
-        joypad = new Joypad(this);
-        timer = new Timer(interruptHandler);
-        dma = new DMA(ppu, mmu);
-        io = new IO(joypad, timer, interruptHandler, dma);
-        cpu = new CPU(this, mmu, interruptHandler);
 
         return true;
     }
@@ -56,10 +58,19 @@ namespace gameboy
     {
         std::thread cpuThread(&CPU::run, cpu);
 
+        uint32_t previousFrame;
         while (currentState != EmulatorState::quit)
         {
             processEvent();
-            renderer->renderDebugger();
+            //printf("JOYPAD : %#02x\n", joypad->read());
+
+            //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            if (previousFrame != ppu->getRenderedFrame())
+            {
+                renderer->render();
+            }
+
+            previousFrame = ppu->getRenderedFrame();
         }
 
         if (cpuThread.joinable()) { cpuThread.join(); }
@@ -71,7 +82,9 @@ namespace gameboy
 
         while(SDL_PollEvent(&event))
         {
-            joypad->buttonEvent(event);
+            if (event.type == SDL_KEYDOWN)  { joypad->handleJoypad(true, event.key.keysym.sym); }
+            if (event.type == SDL_KEYUP)    { joypad->handleJoypad(false, event.key.keysym.sym); }
+            if ((event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE) || event.key.keysym.sym == SDLK_ESCAPE) { currentState = EmulatorState::quit; }
         }
     }
 
@@ -83,6 +96,7 @@ namespace gameboy
             {
                 ticks++;
                 timer->tick();
+                ppu->tick();
             }
             dma->tick();
         }
@@ -90,13 +104,16 @@ namespace gameboy
 
     GameBoy::~GameBoy()
     {
-        if (cpu) { delete cpu; }
-        if (mmu) { delete mmu; }
-        if (io)  { delete io; }
-        if (ppu) { delete ppu; }
-        if (interruptHandler) { delete interruptHandler; }
-        if (joypad) { delete joypad; }
-        if (timer)  { delete timer; }
-        if (cartridge) { delete cartridge; }
+        delete cpu;
+        delete io;
+        delete dma;
+        delete ppu;
+        delete lcd;
+        delete timer;
+        delete joypad;
+        delete interruptHandler;
+        delete renderer;
+        delete mmu;
+        delete cartridge;
     }
 }
