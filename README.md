@@ -1,5 +1,7 @@
 # FreeBoy - GameBoy Emulator
 
+!! WARNING : It has still some debugs.
+
 ### Introduction
 After my Chip8 Emulator adventure, my interest in low level programming 
 and emulators increased even more. Therefore, I set my sights a higher 
